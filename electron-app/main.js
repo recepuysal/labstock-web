@@ -103,7 +103,7 @@ autoUpdater.on('error', (err) => {
 });
 
 ipcMain.on('guncelleme-indir', () => autoUpdater.downloadUpdate());
-ipcMain.on('guncelleme-kur', () => autoUpdater.quitAndInstall());
+ipcMain.on('guncelleme-kur', () => autoUpdater.quitAndInstall(true, true));
 
 app.whenReady().then(() => {
   sunucuyuBaslat();
