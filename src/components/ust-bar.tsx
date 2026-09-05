@@ -20,20 +20,6 @@ export function UstBar({ bas }: { bas?: string }) {
     >
       <Link href="/envanter" style={{ color: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
         <Marka />
-        <span
-          className="mn"
-          style={{
-            fontSize: 9.5,
-            fontWeight: 700,
-            letterSpacing: '0.06em',
-            color: 'var(--muted)',
-            border: '1px solid var(--line)',
-            borderRadius: 4,
-            padding: '2px 5px',
-          }}
-        >
-          WEB
-        </span>
       </Link>
 
       <Suspense fallback={<div style={{ flex: 1, maxWidth: 520, height: 34 }} />}>

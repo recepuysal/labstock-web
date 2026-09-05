@@ -1,9 +1,11 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
 import type { AuthDurum } from '@/app/auth-actions';
+
+const EPOSTA_ANAHTARI = 'labstock-son-eposta';
 
 type Props = {
   mod: 'giris' | 'kayit';
@@ -14,6 +16,23 @@ type Props = {
 export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const [durum, gonder, bekliyor] = useActionState<AuthDurum, FormData>(eylem, {});
   const kayit = mod === 'kayit';
+
+  const [eposta, setEposta] = useState('');
+  useEffect(() => {
+    if (kayit) return;
+    try {
+      const kayitliEposta = localStorage.getItem(EPOSTA_ANAHTARI);
+      if (kayitliEposta) setEposta(kayitliEposta);
+    } catch {}
+  }, [kayit]);
+
+  function epostaKaydet(e: React.ChangeEvent<HTMLInputElement>) {
+    setEposta(e.target.value);
+    if (kayit) return;
+    try {
+      localStorage.setItem(EPOSTA_ANAHTARI, e.target.value);
+    } catch {}
+  }
 
   return (
     <main
@@ -81,6 +100,8 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               required
               autoComplete="email"
               placeholder="ornek@eposta.com"
+              value={eposta}
+              onChange={epostaKaydet}
             />
           </div>
 
