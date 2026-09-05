@@ -6,6 +6,7 @@ import { Marka } from './marka';
 import type { AuthDurum } from '@/app/auth-actions';
 
 const EPOSTA_ANAHTARI = 'labstock-son-eposta';
+const HATIRLA_ANAHTARI = 'labstock-beni-hatirla';
 
 type Props = {
   mod: 'giris' | 'kayit';
@@ -18,19 +19,35 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
   const kayit = mod === 'kayit';
 
   const [eposta, setEposta] = useState('');
+  const [hatirla, setHatirla] = useState(true);
+
   useEffect(() => {
     if (kayit) return;
     try {
-      const kayitliEposta = localStorage.getItem(EPOSTA_ANAHTARI);
-      if (kayitliEposta) setEposta(kayitliEposta);
+      const aktif = localStorage.getItem(HATIRLA_ANAHTARI) !== 'hayir';
+      setHatirla(aktif);
+      if (aktif) {
+        const kayitliEposta = localStorage.getItem(EPOSTA_ANAHTARI);
+        if (kayitliEposta) setEposta(kayitliEposta);
+      }
     } catch {}
   }, [kayit]);
 
-  function epostaKaydet(e: React.ChangeEvent<HTMLInputElement>) {
+  function epostaDegisti(e: React.ChangeEvent<HTMLInputElement>) {
     setEposta(e.target.value);
-    if (kayit) return;
+    if (kayit || !hatirla) return;
     try {
       localStorage.setItem(EPOSTA_ANAHTARI, e.target.value);
+    } catch {}
+  }
+
+  function hatirlaDegisti(e: React.ChangeEvent<HTMLInputElement>) {
+    const secili = e.target.checked;
+    setHatirla(secili);
+    try {
+      localStorage.setItem(HATIRLA_ANAHTARI, secili ? 'evet' : 'hayir');
+      if (secili) localStorage.setItem(EPOSTA_ANAHTARI, eposta);
+      else localStorage.removeItem(EPOSTA_ANAHTARI);
     } catch {}
   }
 
@@ -101,11 +118,11 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               autoComplete="email"
               placeholder="ornek@eposta.com"
               value={eposta}
-              onChange={epostaKaydet}
+              onChange={epostaDegisti}
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: kayit ? 20 : 14 }}>
             <label className="etiket" htmlFor="sifre">
               Şifre
             </label>
@@ -120,6 +137,28 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
               placeholder={kayit ? 'en az 8 karakter' : '••••••••'}
             />
           </div>
+
+          {!kayit && (
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                marginBottom: 20,
+                fontSize: 12.5,
+                color: 'var(--ink-2)',
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={hatirla}
+                onChange={hatirlaDegisti}
+                style={{ width: 15, height: 15, accentColor: 'var(--copper)' }}
+              />
+              Beni hatırla
+            </label>
+          )}
 
           <input type="hidden" name="devam" value={devam} />
 

@@ -65,6 +65,10 @@ function pencereyiAc() {
     },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.on('page-title-updated', (event) => {
+    event.preventDefault();
+    mainWindow.setTitle(`LabStock v${app.getVersion()}`);
+  });
   mainWindow.loadURL(`http://127.0.0.1:${PORT}/`);
 }
 
