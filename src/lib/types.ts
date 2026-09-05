@@ -138,6 +138,21 @@ export function zamanOnce(iso: string): string {
   return new Date(iso).toLocaleDateString('tr-TR');
 }
 
+/** "14:32" gibi saat:dakika; bugünden eskiyse tarih de ekler. */
+export function saatFormatla(iso: string): string {
+  const tarih = new Date(iso);
+  const saat = tarih.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  const bugun = new Date().toDateString() === tarih.toDateString();
+  return bugun ? saat : `${tarih.toLocaleDateString('tr-TR')} ${saat}`;
+}
+
+/** stock_movements.sebep -> okunabilir etiket. */
+export const SEBEP_ETIKET: Record<string, string> = {
+  manuel: 'Manuel',
+  giris: 'Giriş',
+  ice_aktarma: 'İçe aktarma',
+};
+
 /** Her konumun kendisi + tüm alt ağacındaki stok kalemi sayısı (doğrudan
  * sayılardan aşağıdan yukarıya toplanarak). */
 export function konumToplamSayilari(

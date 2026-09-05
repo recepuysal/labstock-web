@@ -10,11 +10,9 @@ import {
   altAgacIdleri,
   konumToplamSayilari,
   konumTipOzeti,
-  konumTipSayimlari,
-  KONUM_TIP_RENK,
   paraFormatla,
+  saatFormatla,
   sayi,
-  zamanOnce,
   type EnvanterSatiri,
   type Konum,
 } from '@/lib/types';
@@ -207,21 +205,15 @@ export default async function EnvanterSayfasi({
             color: 'var(--muted)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span className="rozet rozet-vurgu">{toplamCesit ?? 0} stok kalemi</span>
-            <span className="rozet rozet-notr">{konumlar.length} konum</span>
-            {konumTipSayimlari(konumlar).map(({ tip, adet }) => (
-              <span key={tip} className={`rozet rozet-${KONUM_TIP_RENK[tip] ?? 'notr'}`}>
-                {adet} {tip}
-              </span>
-            ))}
-          </div>
+          <span className="mn">
+            {toplamCesit ?? 0} çeşit · {sayi.format(toplamAdet)} adet
+          </span>
           {kritik > 0 && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span
                 style={{ width: 5, height: 5, borderRadius: 99, background: 'var(--crit-dot)' }}
               />
-              listede {kritik} kritik
+              {kritik} kritik
             </span>
           )}
           {az > 0 && (
@@ -229,22 +221,24 @@ export default async function EnvanterSayfasi({
               <span
                 style={{ width: 5, height: 5, borderRadius: 99, background: 'var(--warn-dot)' }}
               />
-              listede {az} az kaldı
+              {az} az kaldı
             </span>
           )}
 
           <div style={{ flex: 1 }} />
 
-          {depoDegeri.size > 0 && (
-            <span>
-              Toplam depo değeri:{' '}
-              {Array.from(depoDegeri.entries())
-                .map(([birim, tutar]) => paraFormatla(tutar, birim))
-                .join(' · ')}
-            </span>
-          )}
+          <span>
+            Toplam depo değeri{' '}
+            {depoDegeri.size > 0
+              ? Array.from(depoDegeri.entries())
+                  .map(([birim, tutar]) => paraFormatla(tutar, birim))
+                  .join(' · ')
+              : '—'}
+          </span>
 
-          {sonHareket?.created_at && <span>Son işlem: {zamanOnce(sonHareket.created_at)}</span>}
+          <Link href="/envanter/aktiviteler" style={{ color: 'inherit' }}>
+            Son işlem {sonHareket?.created_at ? saatFormatla(sonHareket.created_at) : '—'}
+          </Link>
         </footer>
       </main>
     </>

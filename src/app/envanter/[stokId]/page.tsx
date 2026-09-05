@@ -9,6 +9,7 @@ import {
   DURUM_ETIKET,
   paraFormatla,
   sayi,
+  SEBEP_ETIKET,
   zamanOnce,
   type EnvanterSatiri,
   type Konum,
@@ -17,12 +18,6 @@ import {
 export const dynamic = 'force-dynamic';
 
 const HAREKET_LIMIT = 8;
-
-const SEBEP_ETIKET: Record<string, string> = {
-  manuel: 'Manuel',
-  giris: 'Giriş',
-  ice_aktarma: 'İçe aktarma',
-};
 
 function IstatKart({
   baslik,
