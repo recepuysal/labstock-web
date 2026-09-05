@@ -124,16 +124,17 @@ export default async function EnvanterSayfasi({
 
   return (
     <>
-      <KonumAgaci
-        agac={agac}
-        seciliId={konum}
-        arama={q}
-        toplam={toplamCesit ?? 0}
-        sayilar={sayilar}
-        tipOzeti={tipOzeti}
-      />
+      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+        <KonumAgaci
+          agac={agac}
+          seciliId={konum}
+          arama={q}
+          toplam={toplamCesit ?? 0}
+          sayilar={sayilar}
+          tipOzeti={tipOzeti}
+        />
 
-      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px 0' }}>
           <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)' }}>
             Depo / {seciliKonum ? seciliKonum.ad : 'Tüm envanter'}
@@ -190,8 +191,10 @@ export default async function EnvanterSayfasi({
           {!error && satirlar.length > 0 && gorunum === 'izgara' && <ParcaIzgara satirlar={satirlar} />}
           {!error && satirlar.length > 0 && gorunum !== 'izgara' && <ParcaTablosu satirlar={satirlar} />}
         </div>
+        </main>
+      </div>
 
-        <footer
+      <footer
           style={{
             height: 34,
             flexShrink: 0,
@@ -239,8 +242,7 @@ export default async function EnvanterSayfasi({
           <Link href="/envanter/aktiviteler" style={{ color: 'inherit' }}>
             Son işlem {sonHareket?.created_at ? saatFormatla(sonHareket.created_at) : '—'}
           </Link>
-        </footer>
-      </main>
+      </footer>
     </>
   );
 }

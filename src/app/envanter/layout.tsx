@@ -28,7 +28,7 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <UstBar bas={etiket ? basHarfleri(etiket) : undefined} />
-      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>{children}</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>{children}</div>
     </div>
   );
 }

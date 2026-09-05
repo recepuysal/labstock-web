@@ -1,6 +1,6 @@
 {
   "name": "labstock-desktop",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "main": "main.js",
   "devDependencies": {
@@ -20,7 +20,7 @@
     "publish": {
       "provider": "github",
       "owner": "recepuysal",
-      "repo": "labstock-web"
+      "repo": "labstock"
     },
     "win": {
       "target": "nsis",
