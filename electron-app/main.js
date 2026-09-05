@@ -1,4 +1,5 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
@@ -64,9 +65,53 @@ function pencereyiAc() {
   mainWindow.loadURL(`http://127.0.0.1:${PORT}/`);
 }
 
+function guncellemeleriKontrolEt() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.checkForUpdates().catch((err) => logYaz(`[guncelleme-hata] ${err.message}`));
+}
+
+autoUpdater.on('update-available', (bilgi) => {
+  logYaz(`[guncelleme] bulundu: ${bilgi.version}`);
+  dialog
+    .showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Güncelleme var',
+      message: `LabStock'un yeni bir sürümü var (v${bilgi.version}).`,
+      detail: 'Şimdi indirilsin mi?',
+      buttons: ['İndir', 'Daha sonra'],
+      defaultId: 0,
+      cancelId: 1,
+    })
+    .then(({ response }) => {
+      if (response === 0) autoUpdater.downloadUpdate();
+    });
+});
+
+autoUpdater.on('update-downloaded', (bilgi) => {
+  logYaz(`[guncelleme] indirildi: ${bilgi.version}`);
+  dialog
+    .showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Güncelleme hazır',
+      message: `v${bilgi.version} indirildi.`,
+      detail: 'Şimdi yeniden başlatıp kurulsun mu?',
+      buttons: ['Yeniden başlat ve kur', 'Daha sonra'],
+      defaultId: 0,
+      cancelId: 1,
+    })
+    .then(({ response }) => {
+      if (response === 0) autoUpdater.quitAndInstall();
+    });
+});
+
+autoUpdater.on('error', (err) => logYaz(`[guncelleme-hata] ${err.message}`));
+
 app.whenReady().then(() => {
   sunucuyuBaslat();
-  sunucuHazirMi(pencereyiAc);
+  sunucuHazirMi(() => {
+    pencereyiAc();
+    guncellemeleriKontrolEt();
+  });
 });
 
 app.on('window-all-closed', () => {

@@ -10,8 +10,17 @@
   "build": {
     "appId": "com.labstock.web",
     "productName": "LabStock",
-    "files": ["main.js", "icon.ico"],
+    "files": [
+      "main.js",
+      "icon.ico",
+      "node_modules/**/*"
+    ],
     "afterPack": "afterPack.js",
+    "publish": {
+      "provider": "github",
+      "owner": "recepuysal",
+      "repo": "labstock-web"
+    },
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
@@ -22,5 +31,8 @@
       "allowToChangeInstallationDirectory": true,
       "artifactName": "LabStock-Kurulum.${ext}"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }
