@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -60,9 +60,18 @@ function pencereyiAc() {
     autoHideMenuBar: true,
     show: false,
     icon: path.join(__dirname, 'icon.ico'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   mainWindow.loadURL(`http://127.0.0.1:${PORT}/`);
+}
+
+function renderereGonder(veri) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('guncelleme-durumu', veri);
+  }
 }
 
 function guncellemeleriKontrolEt() {
@@ -72,39 +81,25 @@ function guncellemeleriKontrolEt() {
 
 autoUpdater.on('update-available', (bilgi) => {
   logYaz(`[guncelleme] bulundu: ${bilgi.version}`);
-  dialog
-    .showMessageBox(mainWindow, {
-      type: 'info',
-      title: 'Güncelleme var',
-      message: `LabStock'un yeni bir sürümü var (v${bilgi.version}).`,
-      detail: 'Şimdi indirilsin mi?',
-      buttons: ['İndir', 'Daha sonra'],
-      defaultId: 0,
-      cancelId: 1,
-    })
-    .then(({ response }) => {
-      if (response === 0) autoUpdater.downloadUpdate();
-    });
+  renderereGonder({ tip: 'mevcut', versiyon: bilgi.version });
+});
+
+autoUpdater.on('download-progress', (ilerleme) => {
+  renderereGonder({ tip: 'ilerleme', yuzde: Math.round(ilerleme.percent) });
 });
 
 autoUpdater.on('update-downloaded', (bilgi) => {
   logYaz(`[guncelleme] indirildi: ${bilgi.version}`);
-  dialog
-    .showMessageBox(mainWindow, {
-      type: 'info',
-      title: 'Güncelleme hazır',
-      message: `v${bilgi.version} indirildi.`,
-      detail: 'Şimdi yeniden başlatıp kurulsun mu?',
-      buttons: ['Yeniden başlat ve kur', 'Daha sonra'],
-      defaultId: 0,
-      cancelId: 1,
-    })
-    .then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall();
-    });
+  renderereGonder({ tip: 'hazir', versiyon: bilgi.version });
 });
 
-autoUpdater.on('error', (err) => logYaz(`[guncelleme-hata] ${err.message}`));
+autoUpdater.on('error', (err) => {
+  logYaz(`[guncelleme-hata] ${err.message}`);
+  renderereGonder({ tip: 'hata', mesaj: err.message });
+});
+
+ipcMain.on('guncelleme-indir', () => autoUpdater.downloadUpdate());
+ipcMain.on('guncelleme-kur', () => autoUpdater.quitAndInstall());
 
 app.whenReady().then(() => {
   sunucuyuBaslat();

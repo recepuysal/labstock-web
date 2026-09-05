@@ -1,6 +1,6 @@
 {
   "name": "labstock-desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "main": "main.js",
   "devDependencies": {
@@ -12,6 +12,7 @@
     "productName": "LabStock",
     "files": [
       "main.js",
+      "preload.js",
       "icon.ico",
       "node_modules/**/*"
     ],
