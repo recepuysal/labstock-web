@@ -1,6 +1,6 @@
 {
   "name": "labstock-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "main": "main.js",
   "devDependencies": {
@@ -30,7 +30,8 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "LabStock-Kurulum.${ext}"
+      "artifactName": "LabStock-Kurulum.${ext}",
+      "shortcutName": "LabStock v${version}"
     }
   },
   "dependencies": {
