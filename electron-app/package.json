@@ -1,0 +1,25 @@
+{
+  "name": "labstock-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.js",
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.labstock.web",
+    "productName": "LabStock",
+    "files": ["main.js", "icon.ico"],
+    "extraResources": [{ "from": "standalone", "to": "standalone" }],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "LabStock-Kurulum.${ext}"
+    }
+  }
+}

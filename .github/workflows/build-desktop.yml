@@ -1,0 +1,46 @@
+name: Masaüstü uygulamasını derle (Windows .exe)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Next.js standalone build
+        run: |
+          npm ci
+          npm run build:desktop
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Standalone çıktısını electron-app'e kopyala
+        run: |
+          Remove-Item -Recurse -Force electron-app/standalone -ErrorAction SilentlyContinue
+          Copy-Item -Recurse .next/standalone electron-app/standalone
+
+      - name: Electron ile paketle
+        working-directory: electron-app
+        run: |
+          npm ci
+          npx electron-builder --win --publish never
+
+      - name: Sürüme ekle
+        uses: softprops/action-gh-release@v2
+        with:
+          files: electron-app/dist/*.exe
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('build-{0}', github.run_number) }}
+          name: ${{ github.ref_type == 'tag' && github.ref_name || format('Test derleme #{0}', github.run_number) }}
+          prerelease: ${{ github.ref_type != 'tag' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

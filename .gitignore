@@ -10,3 +10,5 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 supabase/.temp/
+electron-app/standalone/
+electron-app/dist/
