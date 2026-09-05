@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 48 48" role="img" aria-label="LabStock">
+  <title>LabStock işareti — koyu zemin</title>
+  <rect x="17.3" y="7" width="13.4" height="17" fill="#A3611F"/>
+  <rect x="4" y="7" width="40" height="34" rx="4" fill="none" stroke="#F2EDE3" stroke-width="2.6"/>
+  <path d="M4 24h40" stroke="#F2EDE3" stroke-width="2.2"/>
+  <path d="M17.3 7v34" stroke="#F2EDE3" stroke-width="2.2"/>
+  <path d="M30.7 7v34" stroke="#F2EDE3" stroke-width="2.2"/>
+</svg>
