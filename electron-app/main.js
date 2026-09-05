@@ -69,10 +69,17 @@ function pencereyiAc() {
     event.preventDefault();
     mainWindow.setTitle(`LabStock v${app.getVersion()}`);
   });
+  // Sayfa tam yenilenince (ör. çıkış/giriş) son güncelleme durumunu tekrar gönder —
+  // ilk mesaj sayfa henüz hazır değilken gitmiş olabilir, kaybolmasın.
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (sonDurum) renderereGonder(sonDurum);
+  });
   mainWindow.loadURL(`http://127.0.0.1:${PORT}/`);
 }
 
+let sonDurum = null;
 function renderereGonder(veri) {
+  sonDurum = veri;
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('guncelleme-durumu', veri);
   }
