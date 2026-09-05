@@ -11,13 +11,14 @@
     "appId": "com.labstock.web",
     "productName": "LabStock",
     "files": ["main.js", "icon.ico"],
-    "extraResources": [{ "from": "standalone", "to": "standalone" }],
+    "afterPack": "afterPack.js",
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "artifactName": "LabStock-Kurulum.${ext}"
     }

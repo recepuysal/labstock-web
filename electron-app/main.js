@@ -2,10 +2,18 @@ const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
 
 const PORT = 4317;
 let serverProcess;
 let mainWindow;
+
+const logPath = path.join(app.getPath('userData'), 'sunucu-log.txt');
+function logYaz(msg) {
+  try {
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${msg}\n`);
+  } catch {}
+}
 
 function standaloneYolu() {
   return app.isPackaged
@@ -14,7 +22,9 @@ function standaloneYolu() {
 }
 
 function sunucuyuBaslat() {
-  serverProcess = spawn(process.execPath, [standaloneYolu()], {
+  const yol = standaloneYolu();
+  logYaz(`baslatiliyor: ${yol}, exists=${fs.existsSync(yol)}, execPath=${process.execPath}`);
+  serverProcess = spawn(process.execPath, [yol], {
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: '1',
@@ -22,8 +32,12 @@ function sunucuyuBaslat() {
       HOSTNAME: '127.0.0.1',
       NODE_ENV: 'production',
     },
-    stdio: 'ignore',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
+  serverProcess.stdout.on('data', (d) => logYaz(`[stdout] ${d.toString().trim()}`));
+  serverProcess.stderr.on('data', (d) => logYaz(`[stderr] ${d.toString().trim()}`));
+  serverProcess.on('error', (err) => logYaz(`[spawn-error] ${err.message}`));
+  serverProcess.on('exit', (code, signal) => logYaz(`[exit] code=${code} signal=${signal}`));
 }
 
 function sunucuHazirMi(callback, deneme = 0) {
