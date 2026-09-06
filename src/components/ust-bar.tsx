@@ -2,9 +2,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
 import { AramaKutusu } from './arama-kutusu';
-import { HesapMenu } from './hesap-menu';
 
-export function UstBar({ bas }: { bas?: string }) {
+export function UstBar({ bas, resimUrl }: { bas?: string; resimUrl?: string | null }) {
   return (
     <header
       style={{
@@ -84,7 +83,33 @@ export function UstBar({ bas }: { bas?: string }) {
         </svg>
       </Link>
 
-      <HesapMenu bas={bas} />
+      <Link
+        href="/ayarlar/profil"
+        title={bas ? `${bas} — profil` : 'Profil'}
+        aria-label="Profil"
+        className="mn"
+        style={{
+          width: 32,
+          height: 32,
+          flexShrink: 0,
+          borderRadius: 99,
+          background: resimUrl ? undefined : 'var(--ink)',
+          color: 'var(--bg)',
+          fontSize: 11,
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {resimUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={resimUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          (bas ?? '··')
+        )}
+      </Link>
     </header>
   );
 }

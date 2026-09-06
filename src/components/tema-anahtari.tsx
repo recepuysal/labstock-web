@@ -26,22 +26,12 @@ export function TemaAnahtari() {
   }
 
   return (
-    <label
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        cursor: 'pointer',
-        fontSize: 13,
-      }}
-    >
-      <span>Koyu tema</span>
-      <input
-        type="checkbox"
-        checked={koyu}
-        onChange={degistir}
-        style={{ width: 16, height: 16, accentColor: 'var(--copper)' }}
-      />
-    </label>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13 }}>
+      <span>{koyu ? 'Koyu tema' : 'Açık tema'}</span>
+      <label className="anahtar">
+        <input type="checkbox" role="switch" checked={koyu} onChange={degistir} aria-label="Koyu tema" />
+        <span className="parmak" />
+      </label>
+    </div>
   );
 }

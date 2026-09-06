@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ProfilFormu } from '@/components/profil-formu';
 import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Hakkinda } from '@/components/hakkinda';
 
@@ -14,12 +13,6 @@ export default async function AyarlarSayfasi() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/giris');
-
-  const { data: profil } = await supabase
-    .from('profiles')
-    .select('ad, telefon, sirket_adi, sirket_adresi')
-    .eq('id', user.id)
-    .maybeSingle();
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -35,19 +28,14 @@ export default async function AyarlarSayfasi() {
           Ayarlar
         </h1>
         <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
-          Kişisel ve şirket bilgilerin — ileride etiket/rapor gibi çıktılarda kullanılacak.
+          Uygulama tercihleri. Kişisel ve şirket bilgilerin için{' '}
+          <Link href="/ayarlar/profil" style={{ color: 'var(--copper)' }}>
+            profiline
+          </Link>{' '}
+          bak.
         </p>
-        <ProfilFormu
-          baslangic={{
-            eposta: user.email ?? '',
-            ad: profil?.ad ?? null,
-            telefon: profil?.telefon ?? null,
-            sirket_adi: profil?.sirket_adi ?? null,
-            sirket_adresi: profil?.sirket_adresi ?? null,
-          }}
-        />
 
-        <div className="kart" style={{ padding: 20, marginTop: 16 }}>
+        <div className="kart" style={{ padding: 20 }}>
           <div
             className="mn"
             style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}

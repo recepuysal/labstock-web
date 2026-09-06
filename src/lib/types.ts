@@ -1,5 +1,12 @@
 export type Durum = 'yeterli' | 'az' | 'kritik' | 'yok';
 
+/** Bir isim/e-posta'dan avatar baş harflerini üretir (ör. "Recep Uysal" -> "RU"). */
+export function basHarfleri(kaynak: string): string {
+  const parcalar = kaynak.trim().split(/[\s.@_-]+/).filter(Boolean);
+  const harfler = parcalar.slice(0, 2).map((p) => p[0]);
+  return harfler.join('').toLocaleUpperCase('tr-TR') || '··';
+}
+
 export type EnvanterSatiri = {
   stok_id: string;
   adet: number;
