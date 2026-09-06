@@ -53,17 +53,29 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
   const { error: yuklemeHatasi } = await supabase.storage
     .from('profil-resimleri')
     .upload(yol, dosya, { upsert: true, contentType: dosya.type });
-  if (yuklemeHatasi) return { hata: yuklemeHatasi.message };
+  if (yuklemeHatasi) {
+    console.error('[profil-resmi] yukleme hatasi:', yuklemeHatasi);
+    return { hata: `Yükleme hatası: ${yuklemeHatasi.message}` };
+  }
 
   const {
     data: { publicUrl },
   } = supabase.storage.from('profil-resimleri').getPublicUrl(yol);
 
-  const { error } = await supabase
+  const { data: guncellenen, error } = await supabase
     .from('profiles')
     .update({ resim_url: `${publicUrl}?t=${Date.now()}` })
-    .eq('id', user.id);
-  if (error) return { hata: error.message };
+    .eq('id', user.id)
+    .select('id, resim_url');
+
+  if (error) {
+    console.error('[profil-resmi] guncelleme hatasi:', error);
+    return { hata: `Kayıt hatası: ${error.message}` };
+  }
+  console.log('[profil-resmi] guncellendi:', JSON.stringify(guncellenen));
+  if (!guncellenen || guncellenen.length === 0) {
+    return { hata: 'Görsel yüklendi ama profil satırı güncellenemedi (0 satır etkilendi).' };
+  }
 
   revalidatePath('/', 'layout');
   return { bilgi: 'Görsel güncellendi.' };
