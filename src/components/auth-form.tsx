@@ -105,6 +105,22 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
             </div>
           )}
 
+          {kayit && (
+            <div style={{ marginBottom: 14 }}>
+              <label className="etiket" htmlFor="davet_kodu">
+                Davet kodu (varsa)
+              </label>
+              <input
+                className="alan mn"
+                id="davet_kodu"
+                name="davet_kodu"
+                autoComplete="off"
+                placeholder="birinin envanterini izlemek için"
+                style={{ textTransform: 'uppercase' }}
+              />
+            </div>
+          )}
+
           <div style={{ marginBottom: 14 }}>
             <label className="etiket" htmlFor="eposta">
               E-posta

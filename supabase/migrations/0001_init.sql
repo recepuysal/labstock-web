@@ -30,10 +30,25 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_davet_kodu text;
+  v_sahip      uuid;
 begin
   insert into public.profiles (id, ad)
   values (new.id, coalesce(new.raw_user_meta_data ->> 'ad', split_part(new.email, '@', 1)))
   on conflict (id) do nothing;
+
+  -- Kayıt formunda davet kodu girildiyse (gözlemci olarak katılma), e-posta
+  -- doğrulaması açık olsa bile hesap oluşturulur oluşturulmaz bağla —
+  -- geçersiz kod sessizce yoksayılır, kayıt engellenmez (Profil'den tekrar denenebilir).
+  v_davet_kodu := new.raw_user_meta_data ->> 'davet_kodu';
+  if v_davet_kodu is not null and length(trim(v_davet_kodu)) > 0 then
+    select id into v_sahip from public.profiles where davet_kodu = upper(trim(v_davet_kodu));
+    if v_sahip is not null and v_sahip <> new.id then
+      update public.profiles set gozlemci_of = v_sahip where id = new.id;
+    end if;
+  end if;
+
   return new;
 end;
 $$;

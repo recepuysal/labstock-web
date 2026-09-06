@@ -33,6 +33,7 @@ export async function kayitOl(_onceki: AuthDurum, formData: FormData): Promise<A
   const ad = String(formData.get('ad') ?? '').trim();
   const eposta = String(formData.get('eposta') ?? '').trim();
   const sifre = String(formData.get('sifre') ?? '');
+  const davetKodu = String(formData.get('davet_kodu') ?? '').trim();
 
   if (!eposta || !sifre) return { hata: 'E-posta ve şifre gerekli.' };
   if (sifre.length < 8) return { hata: 'Şifre en az 8 karakter olmalı.' };
@@ -41,7 +42,10 @@ export async function kayitOl(_onceki: AuthDurum, formData: FormData): Promise<A
   const { data, error } = await supabase.auth.signUp({
     email: eposta,
     password: sifre,
-    options: { data: { ad } },
+    // davet_kodu, handle_new_user() tetikleyicisi tarafından okunup gözlemci
+    // bağlantısı kuruluyor — e-posta doğrulaması açık olsa bile (oturum
+    // henüz gelmeden) hesap oluşturulur oluşturulmaz bu çalışır.
+    options: { data: { ad, davet_kodu: davetKodu || undefined } },
   });
 
   if (error) return { hata: error.message };
