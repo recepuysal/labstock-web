@@ -1,0 +1,15 @@
+name: Supabase projesini uyanık tut
+
+on:
+  schedule:
+    - cron: '0 6 * * 1,4' # Pazartesi ve Perşembe 06:00 UTC — 7 günlük duraklama eşiğinin altında
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Supabase'e nabız isteği gönder
+        run: |
+          curl -sf "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/auth/v1/health" \
+            -H "apikey: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
