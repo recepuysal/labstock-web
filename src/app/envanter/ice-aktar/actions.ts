@@ -48,7 +48,7 @@ export async function excelIceAktar(
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { data: konumVerisi } = await supabase.from('locations').select('id, ad, kod');
+  const { data: konumVerisi } = await supabase.from('locations').select('id, ad, kod').eq('user_id', user.id);
   const konumlar = konumVerisi ?? [];
 
   let yeniParca = 0;
@@ -98,7 +98,12 @@ export async function excelIceAktar(
         konumId = bulunan?.id ?? null;
       }
 
-      let stokSorgu = supabase.from('stock_items').select('id').eq('part_id', partId).limit(1);
+      let stokSorgu = supabase
+        .from('stock_items')
+        .select('id')
+        .eq('part_id', partId)
+        .eq('user_id', user.id)
+        .limit(1);
       stokSorgu = konumId ? stokSorgu.eq('location_id', konumId) : stokSorgu.is('location_id', null);
       const { data: stok, error: stokAramaHatasi } = await stokSorgu.maybeSingle();
       if (stokAramaHatasi) throw new Error(stokAramaHatasi.message);

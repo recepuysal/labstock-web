@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/server';
 import type { EylemDurum } from '@/app/envanter/actions';
 import type { EnvanterSatiri } from '@/lib/types';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 
 export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const ad = String(formData.get('ad') ?? '').trim();
@@ -95,16 +96,22 @@ const DURUM_METNI: Record<string, string> = {
  * olarak kullandığından düz virgüllü CSV'yi tek sütun halinde açar (noktalı virgül beklenir). */
 export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { hata: 'Oturum bulunamadı.' };
+  const aktif = await aktifGorunumAl();
+  if (!aktif) return { hata: 'Oturum bulunamadı.' };
 
-  const { data, error } = await supabase.from('envanter').select('*').order('mpn', { ascending: true });
+  const { data, error } = await supabase
+    .from('envanter')
+    .select('*')
+    .eq('user_id', aktif.kullaniciId)
+    .order('mpn', { ascending: true });
   if (error) return { hata: error.message };
   const satirlar = (data ?? []) as EnvanterSatiri[];
 
-  const { data: etiketVerisi } = await supabase.from('stock_item_tags').select('stock_item_id, tags(ad)');
+  const stokIdleri = satirlar.map((s) => s.stok_id);
+  const { data: etiketVerisi } =
+    stokIdleri.length > 0
+      ? await supabase.from('stock_item_tags').select('stock_item_id, tags(ad)').in('stock_item_id', stokIdleri)
+      : { data: [] };
   const etiketHaritasi = new Map<string, string[]>();
   for (const row of etiketVerisi ?? []) {
     const ad = (row.tags as unknown as { ad: string } | null)?.ad;

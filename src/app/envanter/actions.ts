@@ -161,11 +161,13 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
     partId = yeni.id;
   }
 
-  // 2) Bu parça bu konumda zaten var mı?
+  // 2) Bu parça bu konumda zaten var mı? (kendi stoğunla sınırlı — izlediğin
+  // bir depo varsa oradaki aynı parça/konum kombinasyonuyla karışmasın diye)
   let sorgu = supabase
     .from('stock_items')
     .select('id, adet')
     .eq('part_id', partId)
+    .eq('user_id', user.id)
     .limit(1);
   sorgu = konumId ? sorgu.eq('location_id', konumId) : sorgu.is('location_id', null);
 

@@ -103,7 +103,7 @@ export function GozlemciErisimi({
             className="mn"
             style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
           >
-            SENİ İZLEYENLER
+            SENİ İZLEYENLER · {gozlemciler.length}/8
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {gozlemciler.map((g, i) => (
