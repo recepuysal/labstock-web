@@ -36,6 +36,34 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
+[data-theme='koyu'] {
+  --bg: #17140f;
+  --surface: #201c16;
+  --surface-2: #241f18;
+  --line: rgba(242, 237, 227, 0.12);
+  --line-soft: rgba(242, 237, 227, 0.07);
+
+  --ink: #f2ede3;
+  --ink-2: #d8d0c2;
+  --muted: #a99d8a;
+  --muted-2: #7d7362;
+
+  --copper: #c17a2e;
+  --copper-dark: #e0a057;
+  --copper-soft: rgba(163, 97, 31, 0.22);
+  --copper-line: rgba(163, 97, 31, 0.45);
+
+  --ok: #6fcf9e;
+  --ok-bg: rgba(47, 138, 103, 0.16);
+  --ok-dot: #4caf7d;
+  --warn: #e0ab4a;
+  --warn-bg: rgba(185, 130, 24, 0.16);
+  --warn-dot: #cf9a35;
+  --crit: #e08172;
+  --crit-bg: rgba(179, 38, 30, 0.16);
+  --crit-dot: #c94b3d;
+}
+
 * {
   box-sizing: border-box;
 }

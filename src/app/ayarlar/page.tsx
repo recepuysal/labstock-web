@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ProfilFormu } from '@/components/profil-formu';
+import { TemaAnahtari } from '@/components/tema-anahtari';
+import { Hakkinda } from '@/components/hakkinda';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +46,18 @@ export default async function AyarlarSayfasi() {
             sirket_adresi: profil?.sirket_adresi ?? null,
           }}
         />
+
+        <div className="kart" style={{ padding: 20, marginTop: 16 }}>
+          <div
+            className="mn"
+            style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 12 }}
+          >
+            GÖRÜNÜM
+          </div>
+          <TemaAnahtari />
+        </div>
+
+        <Hakkinda />
       </div>
     </main>
   );

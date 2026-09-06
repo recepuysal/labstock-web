@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-type GuncellemeDurumu =
+export type GuncellemeDurumu =
   | { tip: 'mevcut'; versiyon: string }
   | { tip: 'ilerleme'; yuzde: number }
   | { tip: 'hazir'; versiyon: string }
@@ -13,7 +13,9 @@ declare global {
     electronAPI?: {
       guncellemeyiIndir: () => void;
       guncellemeyiKur: () => void;
+      guncellemeleriKontrolEt: () => void;
       guncellemeDurumuDinle: (callback: (veri: GuncellemeDurumu) => void) => () => void;
+      surumAl: () => Promise<string>;
     };
   }
 }

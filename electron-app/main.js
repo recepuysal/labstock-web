@@ -111,6 +111,8 @@ autoUpdater.on('error', (err) => {
 
 ipcMain.on('guncelleme-indir', () => autoUpdater.downloadUpdate());
 ipcMain.on('guncelleme-kur', () => autoUpdater.quitAndInstall(true, true));
+ipcMain.on('guncelleme-kontrol-et', () => guncellemeleriKontrolEt());
+ipcMain.handle('surum-al', () => app.getVersion());
 
 app.whenReady().then(() => {
   sunucuyuBaslat();

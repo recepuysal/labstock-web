@@ -11,6 +11,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="tr">
       <head>
+        {/* Tema flaşını önlemek için: sayfa boyanmadan önce kayıtlı tercihi uygula. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('labstock-tema')==='koyu'){document.documentElement.setAttribute('data-theme','koyu');}}catch(e){}`,
+          }}
+        />
         {/* next/font yerine <link>: derleme sırasında Google'a istek atmaz,
             ağı kısıtlı ortamlarda build kırılmaz. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
