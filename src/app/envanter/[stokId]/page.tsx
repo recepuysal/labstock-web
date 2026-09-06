@@ -159,6 +159,16 @@ export default async function ParcaDetaySayfasi({
                   Datasheet
                 </a>
               )}
+              {s.tedarikci === 'LCSC' && s.tedarikci_kodu && (
+                <a
+                  href={`https://www.lcsc.com/product-detail/_${encodeURIComponent(s.tedarikci_kodu)}.html`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                >
+                  LCSC&apos;de gör
+                </a>
+              )}
               <LcscCekFormu stokId={s.stok_id} partId={s.part_id} mevcutKod={s.tedarikci_kodu} />
               <SatirMenu stokId={s.stok_id} mpn={s.mpn} />
             </div>
