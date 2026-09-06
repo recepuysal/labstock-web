@@ -1,9 +1,9 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
-import type { AuthDurum } from '@/app/auth-actions';
+import { kodDogrula, kodYenidenGonder, type AuthDurum } from '@/app/auth-actions';
 
 const EPOSTA_ANAHTARI = 'labstock-son-eposta';
 const HATIRLA_ANAHTARI = 'labstock-beni-hatirla';
@@ -20,6 +20,12 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
 
   const [eposta, setEposta] = useState('');
   const [hatirla, setHatirla] = useState(true);
+
+  const [kodDurum, kodGonder, kodBekliyor] = useActionState<AuthDurum, FormData>(kodDogrula, {});
+  const [geriDon, setGeriDon] = useState(false);
+  const [yenidenGonderiliyor, yenidenBasla] = useTransition();
+  const [yenidenMesaj, setYenidenMesaj] = useState<string | null>(null);
+  const kodAdimindeyiz = Boolean(durum.kodBekleniyor) && !geriDon;
 
   useEffect(() => {
     if (kayit) return;
@@ -49,6 +55,104 @@ export function AuthForm({ mod, eylem, devam = '/envanter' }: Props) {
       if (secili) localStorage.setItem(EPOSTA_ANAHTARI, eposta);
       else localStorage.removeItem(EPOSTA_ANAHTARI);
     } catch {}
+  }
+
+  function yenidenGonder() {
+    if (!durum.kodBekleniyor) return;
+    setYenidenMesaj(null);
+    const hedefEposta = durum.kodBekleniyor;
+    yenidenBasla(async () => {
+      const sonuc = await kodYenidenGonder(hedefEposta);
+      setYenidenMesaj(sonuc.hata ?? sonuc.bilgi ?? null);
+    });
+  }
+
+  if (kodAdimindeyiz) {
+    return (
+      <main
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+            <Marka boyut={32} />
+          </div>
+
+          <form action={kodGonder} className="kart" style={{ padding: 22 }}>
+            <h1 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 600, letterSpacing: '-0.4px' }}>
+              E-postanı doğrula
+            </h1>
+            <p style={{ margin: '0 0 20px', fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+              <strong>{durum.kodBekleniyor}</strong> adresine 6 haneli bir doğrulama kodu gönderdik.
+            </p>
+
+            {kodDurum.hata && (
+              <div className="hata" style={{ marginBottom: 14 }}>
+                {kodDurum.hata}
+              </div>
+            )}
+
+            <input type="hidden" name="eposta" value={durum.kodBekleniyor} />
+
+            <div style={{ marginBottom: 20 }}>
+              <label className="etiket" htmlFor="kod">
+                Doğrulama kodu
+              </label>
+              <input
+                className="alan mn"
+                id="kod"
+                name="kod"
+                required
+                autoFocus
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="123456"
+                style={{ fontSize: 20, letterSpacing: '0.3em', textAlign: 'center' }}
+              />
+            </div>
+
+            <button
+              className="btn btn-birincil"
+              type="submit"
+              disabled={kodBekliyor}
+              style={{ width: '100%', height: 40, marginBottom: 10 }}
+            >
+              {kodBekliyor ? 'Onaylanıyor…' : 'Onayla'}
+            </button>
+
+            <button
+              type="button"
+              className="btn"
+              onClick={yenidenGonder}
+              disabled={yenidenGonderiliyor}
+              style={{ width: '100%', height: 36 }}
+            >
+              {yenidenGonderiliyor ? 'Gönderiliyor…' : 'Kodu tekrar gönder'}
+            </button>
+            {yenidenMesaj && (
+              <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--muted)', textAlign: 'center' }}>
+                {yenidenMesaj}
+              </p>
+            )}
+
+            <p style={{ margin: '18px 0 0', fontSize: 12.5, color: 'var(--muted)', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setGeriDon(true)}
+                style={{ background: 'none', border: 'none', padding: 0, color: 'var(--copper)', cursor: 'pointer', font: 'inherit' }}
+              >
+                Farklı e-posta ile dene
+              </button>
+            </p>
+          </form>
+        </div>
+      </main>
+    );
   }
 
   return (

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-export type AuthDurum = { hata?: string; bilgi?: string };
+export type AuthDurum = { hata?: string; bilgi?: string; kodBekleniyor?: string };
 
 export async function girisYap(_onceki: AuthDurum, formData: FormData): Promise<AuthDurum> {
   const eposta = String(formData.get('eposta') ?? '').trim();
@@ -17,6 +17,9 @@ export async function girisYap(_onceki: AuthDurum, formData: FormData): Promise<
   const { error } = await supabase.auth.signInWithPassword({ email: eposta, password: sifre });
 
   if (error) {
+    if (error.message === 'Email not confirmed') {
+      return { kodBekleniyor: eposta };
+    }
     return {
       hata:
         error.message === 'Invalid login credentials'
@@ -50,13 +53,44 @@ export async function kayitOl(_onceki: AuthDurum, formData: FormData): Promise<A
 
   if (error) return { hata: error.message };
 
-  // E-posta doğrulaması açıksa oturum gelmez; kullanıcıyı bekletme.
+  // E-posta doğrulaması açık: oturum gelmez, 6 haneli kod ekranına geç.
   if (!data.session) {
-    return { bilgi: 'Hesabı doğrulamak için e-postana gönderdiğimiz bağlantıya tıkla.' };
+    return { kodBekleniyor: eposta };
   }
 
   revalidatePath('/', 'layout');
   redirect('/envanter');
+}
+
+/** Kayıt/giriş sırasında e-postaya gönderilen 6 haneli kodu doğrular. */
+export async function kodDogrula(_onceki: AuthDurum, formData: FormData): Promise<AuthDurum> {
+  const eposta = String(formData.get('eposta') ?? '').trim();
+  const kod = String(formData.get('kod') ?? '').trim();
+
+  if (!eposta || !kod) return { hata: 'Kod gerekli.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email: eposta, token: kod, type: 'signup' });
+
+  if (error) {
+    return {
+      hata:
+        error.message === 'Token has expired or is invalid'
+          ? 'Kod hatalı ya da süresi dolmuş.'
+          : error.message,
+    };
+  }
+
+  revalidatePath('/', 'layout');
+  redirect('/envanter');
+}
+
+/** Kodun süresi dolduysa ya da e-posta gelmediyse yeniden gönderir. */
+export async function kodYenidenGonder(eposta: string): Promise<AuthDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({ type: 'signup', email: eposta });
+  if (error) return { hata: error.message };
+  return { bilgi: 'Yeni kod gönderildi.' };
 }
 
 export async function cikisYap() {
