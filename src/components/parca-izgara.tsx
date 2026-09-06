@@ -55,7 +55,7 @@ export function ParcaIzgara({
                 </div>
               )}
             </div>
-            {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
+            <SatirMenu stokId={s.stok_id} mpn={s.mpn} saltOkunur={saltOkunur} />
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -115,7 +115,7 @@ export function ParcaIzgara({
                 {DURUM_ETIKET[s.durum]}
               </span>
             </div>
-            {!saltOkunur && <AdetButonlari stokId={s.stok_id} adet={s.adet} />}
+            <AdetButonlari stokId={s.stok_id} adet={s.adet} saltOkunur={saltOkunur} />
           </div>
         </div>
       ))}

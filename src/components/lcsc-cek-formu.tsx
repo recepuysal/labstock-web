@@ -8,17 +8,19 @@ export function LcscCekFormu({
   stokId,
   partId,
   mevcutKod,
+  saltOkunur,
 }: {
   stokId: string;
   partId: string;
   mevcutKod: string | null;
+  saltOkunur?: boolean;
 }) {
   const [acik, setAcik] = useState(false);
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(lcscdenCek, {});
 
   if (!acik) {
     return (
-      <button type="button" className="btn" onClick={() => setAcik(true)}>
+      <button type="button" className="btn" disabled={saltOkunur} onClick={() => setAcik(true)}>
         LCSC&apos;den çek
       </button>
     );

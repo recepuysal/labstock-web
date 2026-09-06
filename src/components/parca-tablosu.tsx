@@ -132,8 +132,8 @@ export function ParcaTablosu({
             </span>
           </div>
 
-          {!saltOkunur && <AdetButonlari stokId={s.stok_id} adet={s.adet} />}
-          {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
+          <AdetButonlari stokId={s.stok_id} adet={s.adet} saltOkunur={saltOkunur} />
+          <SatirMenu stokId={s.stok_id} mpn={s.mpn} saltOkunur={saltOkunur} />
         </div>
       ))}
     </div>

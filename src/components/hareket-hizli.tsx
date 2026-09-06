@@ -3,7 +3,15 @@
 import { useState, useTransition } from 'react';
 import { stokHareket } from '@/app/envanter/actions';
 
-export function HareketHizli({ stokId, adet }: { stokId: string; adet: number }) {
+export function HareketHizli({
+  stokId,
+  adet,
+  saltOkunur,
+}: {
+  stokId: string;
+  adet: number;
+  saltOkunur?: boolean;
+}) {
   const [acikYon, setAcikYon] = useState<1 | -1 | null>(null);
   const [miktar, setMiktar] = useState('1');
   const [hata, setHata] = useState<string | null>(null);
@@ -63,12 +71,12 @@ export function HareketHizli({ stokId, adet }: { stokId: string; adet: number })
       <button
         type="button"
         className="btn btn-birincil"
-        disabled={adet <= 0}
+        disabled={saltOkunur || adet <= 0}
         onClick={() => setAcikYon(-1)}
       >
         − Stok düş
       </button>
-      <button type="button" className="btn" onClick={() => setAcikYon(1)}>
+      <button type="button" className="btn" disabled={saltOkunur} onClick={() => setAcikYon(1)}>
         + Stok ekle
       </button>
     </div>

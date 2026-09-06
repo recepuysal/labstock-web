@@ -173,7 +173,25 @@ export function KonumAgaci({
         </p>
       )}
 
-      {!saltOkunur && (
+      {saltOkunur ? (
+        <span
+          aria-disabled="true"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7,
+            height: 27,
+            padding: '0 8px',
+            marginTop: 4,
+            borderRadius: 'var(--r-sm)',
+            fontSize: 12.5,
+            color: 'var(--muted-2)',
+            opacity: 0.5,
+          }}
+        >
+          + Konum ekle
+        </span>
+      ) : (
         <Link
           href="/envanter/konum-ekle"
           style={{

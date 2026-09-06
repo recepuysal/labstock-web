@@ -3,7 +3,15 @@
 import { useState, useTransition } from 'react';
 import { stokHareket } from '@/app/envanter/actions';
 
-export function AdetButonlari({ stokId, adet }: { stokId: string; adet: number }) {
+export function AdetButonlari({
+  stokId,
+  adet,
+  saltOkunur,
+}: {
+  stokId: string;
+  adet: number;
+  saltOkunur?: boolean;
+}) {
   const [bekliyor, basla] = useTransition();
   const [hata, setHata] = useState<string | null>(null);
   const [bildirim, setBildirim] = useState<{ id: number; delta: number } | null>(null);
@@ -35,7 +43,13 @@ export function AdetButonlari({ stokId, adet }: { stokId: string; adet: number }
 
   return (
     <div
-      style={{ position: 'relative', display: 'flex', gap: 4, justifyContent: 'flex-end' }}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        gap: 4,
+        justifyContent: 'flex-end',
+        opacity: saltOkunur ? 0.4 : 1,
+      }}
       title={hata ?? undefined}
     >
       {bildirim && (
@@ -51,7 +65,7 @@ export function AdetButonlari({ stokId, adet }: { stokId: string; adet: number }
       <button
         type="button"
         style={{ ...kutu, borderColor: hata ? 'var(--crit)' : 'var(--line)' }}
-        disabled={bekliyor || adet <= 0}
+        disabled={saltOkunur || bekliyor || adet <= 0}
         onClick={() => calistir(-1)}
         aria-label="Bir adet düş"
       >
@@ -62,7 +76,7 @@ export function AdetButonlari({ stokId, adet }: { stokId: string; adet: number }
       <button
         type="button"
         style={kutu}
-        disabled={bekliyor}
+        disabled={saltOkunur || bekliyor}
         onClick={() => calistir(1)}
         aria-label="Bir adet ekle"
       >

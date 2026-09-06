@@ -180,8 +180,12 @@ export default async function ParcaDetaySayfasi({
             )}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 }}>
-              {!saltOkunur && <HareketHizli stokId={s.stok_id} adet={s.adet} />}
-              {!saltOkunur && (
+              <HareketHizli stokId={s.stok_id} adet={s.adet} saltOkunur={saltOkunur} />
+              {saltOkunur ? (
+                <span className="btn" aria-disabled="true" style={{ opacity: 0.45, cursor: 'default' }}>
+                  Konum değiştir
+                </span>
+              ) : (
                 <Link href={`/envanter/${s.stok_id}/duzenle?donus=${encodeURIComponent(donus)}`} className="btn">
                   Konum değiştir
                 </Link>
@@ -201,10 +205,13 @@ export default async function ParcaDetaySayfasi({
                   LCSC&apos;de gör
                 </a>
               )}
-              {!saltOkunur && (
-                <LcscCekFormu stokId={s.stok_id} partId={s.part_id} mevcutKod={s.tedarikci_kodu} />
-              )}
-              {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
+              <LcscCekFormu
+                stokId={s.stok_id}
+                partId={s.part_id}
+                mevcutKod={s.tedarikci_kodu}
+                saltOkunur={saltOkunur}
+              />
+              <SatirMenu stokId={s.stok_id} mpn={s.mpn} saltOkunur={saltOkunur} />
             </div>
 
             <div
@@ -406,9 +413,12 @@ export default async function ParcaDetaySayfasi({
                 </p>
               )}
 
-              {!saltOkunur && (
-                <ProjeEkleFormu partId={s.part_id} projeler={projeler ?? []} donus={donus} />
-              )}
+              <ProjeEkleFormu
+                partId={s.part_id}
+                projeler={projeler ?? []}
+                donus={donus}
+                saltOkunur={saltOkunur}
+              />
             </div>
 
             <EtiketlerKarti

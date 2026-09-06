@@ -44,29 +44,28 @@ export function EtiketlerKarti({
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               {e.ad}
-              {!saltOkunur && (
-                <button
-                  type="button"
-                  onClick={() => sil(e.id)}
-                  disabled={siliniyor}
-                  aria-label={`${e.ad} etiketini kaldır`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 13,
-                    height: 13,
-                    padding: 0,
-                    border: 'none',
-                    background: 'none',
-                    color: 'var(--muted)',
-                    cursor: 'pointer',
-                    lineHeight: 1,
-                  }}
-                >
-                  ×
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => sil(e.id)}
+                disabled={saltOkunur || siliniyor}
+                aria-label={`${e.ad} etiketini kaldır`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 13,
+                  height: 13,
+                  padding: 0,
+                  border: 'none',
+                  background: 'none',
+                  color: 'var(--muted)',
+                  cursor: saltOkunur ? 'default' : 'pointer',
+                  opacity: saltOkunur ? 0.4 : 1,
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
             </span>
           ))}
         </div>
@@ -76,40 +75,42 @@ export function EtiketlerKarti({
         <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>Henüz etiket yok.</p>
       )}
 
-      {!saltOkunur && (
-        <>
-          <form
-            ref={formRef}
-            action={(fd) => {
-              gonder(fd);
-              formRef.current?.reset();
-            }}
-            style={{ display: 'flex', gap: 6 }}
-          >
-            <input type="hidden" name="stok_id" value={stokId} />
-            <input
-              className="alan"
-              style={{ height: 30, fontSize: 12 }}
-              name="etiket_adi"
-              placeholder="+ etiket ekle"
-              list="etiket-onerileri"
-              autoComplete="off"
-            />
-            <datalist id="etiket-onerileri">
-              {oneriler.map((ad) => (
-                <option key={ad} value={ad} />
-              ))}
-            </datalist>
-            <button className="btn" style={{ height: 30, fontSize: 12, flexShrink: 0 }} type="submit" disabled={ekleniyor}>
-              {ekleniyor ? '…' : 'Ekle'}
-            </button>
-          </form>
-          {durum.hata && (
-            <div className="hata" style={{ marginTop: 8, fontSize: 11.5, padding: '6px 9px' }}>
-              {durum.hata}
-            </div>
-          )}
-        </>
+      <form
+        ref={formRef}
+        action={(fd) => {
+          gonder(fd);
+          formRef.current?.reset();
+        }}
+        style={{ display: 'flex', gap: 6, opacity: saltOkunur ? 0.5 : 1 }}
+      >
+        <input type="hidden" name="stok_id" value={stokId} />
+        <input
+          className="alan"
+          style={{ height: 30, fontSize: 12 }}
+          name="etiket_adi"
+          placeholder="+ etiket ekle"
+          list="etiket-onerileri"
+          autoComplete="off"
+          disabled={saltOkunur}
+        />
+        <datalist id="etiket-onerileri">
+          {oneriler.map((ad) => (
+            <option key={ad} value={ad} />
+          ))}
+        </datalist>
+        <button
+          className="btn"
+          style={{ height: 30, fontSize: 12, flexShrink: 0 }}
+          type="submit"
+          disabled={saltOkunur || ekleniyor}
+        >
+          {ekleniyor ? '…' : 'Ekle'}
+        </button>
+      </form>
+      {durum.hata && (
+        <div className="hata" style={{ marginTop: 8, fontSize: 11.5, padding: '6px 9px' }}>
+          {durum.hata}
+        </div>
       )}
     </div>
   );

@@ -4,7 +4,15 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { stokSil } from '@/app/envanter/actions';
 
-export function SatirMenu({ stokId, mpn }: { stokId: string; mpn: string }) {
+export function SatirMenu({
+  stokId,
+  mpn,
+  saltOkunur,
+}: {
+  stokId: string;
+  mpn: string;
+  saltOkunur?: boolean;
+}) {
   const [acik, setAcik] = useState(false);
   const [bekliyor, basla] = useTransition();
   const kutuRef = useRef<HTMLDivElement>(null);
@@ -43,7 +51,7 @@ export function SatirMenu({ stokId, mpn }: { stokId: string; mpn: string }) {
       <button
         type="button"
         onClick={() => setAcik((a) => !a)}
-        disabled={bekliyor}
+        disabled={saltOkunur || bekliyor}
         aria-label="İşlemler"
         aria-haspopup="menu"
         aria-expanded={acik}
@@ -59,6 +67,7 @@ export function SatirMenu({ stokId, mpn }: { stokId: string; mpn: string }) {
           color: 'var(--muted)',
           padding: 0,
           marginLeft: 'auto',
+          opacity: saltOkunur ? 0.4 : 1,
         }}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">

@@ -10,10 +10,12 @@ export function ProjeEkleFormu({
   partId,
   projeler,
   donus,
+  saltOkunur,
 }: {
   partId: string;
   projeler: { id: string; ad: string }[];
   donus: string;
+  saltOkunur?: boolean;
 }) {
   const [acik, setAcik] = useState(false);
   const [secim, setSecim] = useState(projeler.length ? projeler[0].id : YENI_PROJE);
@@ -23,13 +25,14 @@ export function ProjeEkleFormu({
     return (
       <button
         type="button"
+        disabled={saltOkunur}
         onClick={() => setAcik(true)}
         style={{
           fontSize: 11.5,
-          color: 'var(--copper)',
+          color: saltOkunur ? 'var(--muted-2)' : 'var(--copper)',
           background: 'none',
           border: 'none',
-          cursor: 'pointer',
+          cursor: saltOkunur ? 'default' : 'pointer',
           padding: 0,
         }}
       >
