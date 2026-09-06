@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { cikisYap } from '@/app/auth-actions';
 
 export function HesapMenu({ bas }: { bas?: string }) {
@@ -69,15 +68,8 @@ export function HesapMenu({ bas }: { bas?: string }) {
             overflow: 'hidden',
           }}
         >
-          <Link href="/ayarlar" role="menuitem" onClick={() => setAcik(false)} style={menuOge}>
-            Ayarlar
-          </Link>
           <form action={cikisYap}>
-            <button
-              type="submit"
-              role="menuitem"
-              style={{ ...menuOge, borderTop: '1px solid var(--line-soft)' }}
-            >
+            <button type="submit" role="menuitem" style={menuOge}>
               Çıkış yap
             </button>
           </form>
