@@ -50,7 +50,7 @@ export function GorunumSecici({
       title="Görüntülenen depo"
     >
       <button type="button" style={pil(!izleniyor)} disabled={bekliyor} onClick={() => degistir('kendi')}>
-        Benim deposu
+        Benim Depom
       </button>
       <button type="button" style={pil(izleniyor)} disabled={bekliyor} onClick={() => degistir('gozlemci')}>
         {izlenenAdi}
