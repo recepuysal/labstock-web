@@ -2,11 +2,39 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { metinToParametreler } from '@/lib/types';
 import { lcscKoduGetir } from '@/lib/lcsc';
+import { GORUNUM_COOKIE } from '@/lib/gozlemci';
 
 export type EylemDurum = { hata?: string; bilgi?: string };
+
+/** Kendi deponla izlediğin (varsa) depo arasında geçiş yapar. */
+export async function gorunumuDegistir(hedef: 'kendi' | 'gozlemci'): Promise<void> {
+  const cookieDeposu = await cookies();
+
+  if (hedef === 'kendi') {
+    cookieDeposu.delete(GORUNUM_COOKIE);
+    return;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profil } = await supabase.from('profiles').select('gozlemci_of').eq('id', user.id).maybeSingle();
+  if (!profil?.gozlemci_of) return;
+
+  cookieDeposu.set(GORUNUM_COOKIE, profil.gozlemci_of, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  });
+}
 
 function rohsDegerinden(ham: FormDataEntryValue | null): boolean | null {
   const deger = String(ham ?? '');

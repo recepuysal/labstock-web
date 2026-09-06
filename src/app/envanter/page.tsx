@@ -1,11 +1,12 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { KonumAgaci } from '@/components/konum-agaci';
 import { ParcaTablosu } from '@/components/parca-tablosu';
 import { ParcaIzgara } from '@/components/parca-izgara';
 import { EnvanterFiltreleri } from '@/components/envanter-filtreleri';
-import { saltOkunurMu } from '@/lib/gozlemci';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   agacKur,
   altAgacIdleri,
@@ -38,17 +39,20 @@ export default async function EnvanterSayfasi({
 }) {
   const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = await searchParams;
   const supabase = await createClient();
-  const saltOkunur = await saltOkunurMu();
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  const { kullaniciId: hedef, saltOkunur } = aktif;
 
   const { data: konumVerisi } = await supabase
     .from('locations')
     .select('id, parent_id, ad, kod, tip, aciklama, sira')
+    .eq('user_id', hedef)
     .order('sira', { ascending: true });
 
   const konumlar = (konumVerisi ?? []) as Konum[];
   const agac = agacKur(konumlar);
 
-  let sorgu = supabase.from('envanter').select('*').limit(LIMIT);
+  let sorgu = supabase.from('envanter').select('*').eq('user_id', hedef).limit(LIMIT);
 
   if (konum) {
     sorgu = sorgu.in('konum_id', altAgacIdleri(konum, konumlar));
@@ -65,8 +69,9 @@ export default async function EnvanterSayfasi({
   if (etiket) {
     const { data: etiketliStokVerisi } = await supabase
       .from('stock_item_tags')
-      .select('stock_item_id, tags!inner(ad)')
-      .eq('tags.ad', etiket);
+      .select('stock_item_id, tags!inner(ad, user_id)')
+      .eq('tags.ad', etiket)
+      .eq('tags.user_id', hedef);
     const stokIdleri = (etiketliStokVerisi ?? []).map((r) => r.stock_item_id);
     if (stokIdleri.length === 0) etiketliBosSonuc = true;
     else sorgu = sorgu.in('stok_id', stokIdleri);
@@ -100,16 +105,22 @@ export default async function EnvanterSayfasi({
     new Set((katalogVerisi ?? []).map((p) => p.kilif).filter((v): v is string => Boolean(v))),
   ).sort((a, b) => a.localeCompare(b, 'tr'));
 
-  const { data: etiketVerisi } = await supabase.from('tags').select('ad').order('ad', { ascending: true });
+  const { data: etiketVerisi } = await supabase
+    .from('tags')
+    .select('ad')
+    .eq('user_id', hedef)
+    .order('ad', { ascending: true });
   const etiketler = (etiketVerisi ?? []).map((t) => t.ad);
 
   const { count: toplamCesit } = await supabase
     .from('stock_items')
-    .select('id', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', hedef);
 
   const { data: stokOzetVerisi } = await supabase
     .from('stock_items')
-    .select('location_id, adet, alis_fiyati, para_birimi');
+    .select('location_id, adet, alis_fiyati, para_birimi')
+    .eq('user_id', hedef);
 
   const dogrudanSayilar = new Map<string, number>();
   const depoDegeri = new Map<string, number>();
@@ -128,6 +139,7 @@ export default async function EnvanterSayfasi({
   const { data: sonHareket } = await supabase
     .from('stock_movements')
     .select('created_at')
+    .eq('user_id', hedef)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

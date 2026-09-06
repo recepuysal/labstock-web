@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SatirMenu } from '@/components/satir-menu';
 import { HareketHizli } from '@/components/hareket-hizli';
@@ -7,7 +7,7 @@ import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
-import { saltOkunurMu } from '@/lib/gozlemci';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 import {
   DURUM_ETIKET,
   paraFormatla,
@@ -61,12 +61,15 @@ export default async function ParcaDetaySayfasi({
   const { stokId } = await params;
   const { tumu } = await searchParams;
   const supabase = await createClient();
-  const saltOkunur = await saltOkunurMu();
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  const { kullaniciId: hedef, saltOkunur } = aktif;
 
   const { data: satir } = await supabase
     .from('envanter')
     .select('*')
     .eq('stok_id', stokId)
+    .eq('user_id', hedef)
     .maybeSingle();
 
   if (!satir) notFound();
@@ -75,10 +78,14 @@ export default async function ParcaDetaySayfasi({
 
   const { data: konumVerisi } = await supabase
     .from('locations')
-    .select('id, parent_id, ad, kod, tip, aciklama, sira');
+    .select('id, parent_id, ad, kod, tip, aciklama, sira')
+    .eq('user_id', hedef);
   const konumlar = (konumVerisi ?? []) as Konum[];
 
-  const { data: stokLokasyonVerisi } = await supabase.from('stock_items').select('location_id');
+  const { data: stokLokasyonVerisi } = await supabase
+    .from('stock_items')
+    .select('location_id')
+    .eq('user_id', hedef);
   const dogrudanSayilar = new Map<string, number>();
   for (const row of stokLokasyonVerisi ?? []) {
     if (row.location_id) dogrudanSayilar.set(row.location_id, (dogrudanSayilar.get(row.location_id) ?? 0) + 1);
@@ -88,13 +95,15 @@ export default async function ParcaDetaySayfasi({
   const { data: projeler } = await supabase
     .from('projects')
     .select('id, ad')
+    .eq('user_id', hedef)
     .order('ad', { ascending: true });
   const projeAdHarita = new Map((projeler ?? []).map((p) => [p.id, p.ad]));
 
   const { data: bomVerisi } = await supabase
     .from('project_bom')
     .select('id, adet, referans, proje_id')
-    .eq('part_id', s.part_id);
+    .eq('part_id', s.part_id)
+    .eq('user_id', hedef);
   const bomSatirlari = bomVerisi ?? [];
   const ayrilan = bomSatirlari.reduce((t, b) => t + Number(b.adet), 0);
   const kullanilabilir = Math.max(0, s.adet - ayrilan);
@@ -103,6 +112,7 @@ export default async function ParcaDetaySayfasi({
     .from('stock_movements')
     .select('id, delta, sonraki_adet, sebep, aciklama, proje_id, created_at')
     .eq('stock_item_id', s.stok_id)
+    .eq('user_id', hedef)
     .order('created_at', { ascending: false });
   if (!tumu) hareketSorgu = hareketSorgu.limit(HAREKET_LIMIT);
   const { data: hareketVerisi } = await hareketSorgu;
@@ -111,7 +121,8 @@ export default async function ParcaDetaySayfasi({
   const { count: toplamHareket } = await supabase
     .from('stock_movements')
     .select('id', { count: 'exact', head: true })
-    .eq('stock_item_id', s.stok_id);
+    .eq('stock_item_id', s.stok_id)
+    .eq('user_id', hedef);
 
   const { data: etiketVerisi } = await supabase
     .from('stock_item_tags')
@@ -122,7 +133,11 @@ export default async function ParcaDetaySayfasi({
     .filter((t): t is { id: string; ad: string } => Boolean(t))
     .sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
 
-  const { data: tumEtiketVerisi } = await supabase.from('tags').select('ad').order('ad', { ascending: true });
+  const { data: tumEtiketVerisi } = await supabase
+    .from('tags')
+    .select('ad')
+    .eq('user_id', hedef)
+    .order('ad', { ascending: true });
   const etiketOnerileri = (tumEtiketVerisi ?? []).map((t) => t.ad);
 
   return (

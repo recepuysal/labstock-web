@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation';
 import { ExcelIceAktarFormu } from '@/components/excel-ice-aktar-formu';
-import { saltOkunurMu } from '@/lib/gozlemci';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ExcelIceAktarSayfasi() {
-  if (await saltOkunurMu()) redirect('/envanter');
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  if (aktif.saltOkunur) redirect('/envanter');
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}>
       <div style={{ maxWidth: 620, margin: '0 auto' }}>

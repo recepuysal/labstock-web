@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ParcaFormu, type ParcaBaslangic } from '@/components/parca-formu';
 import { agacKur, konumSecenekleri, type EnvanterSatiri, type Konum } from '@/lib/types';
-import { saltOkunurMu } from '@/lib/gozlemci';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,13 +15,16 @@ export default async function ParcaDuzenleSayfasi({
 }) {
   const { stokId } = await params;
   const { donus } = await searchParams;
-  if (await saltOkunurMu()) redirect(donus || `/envanter/${stokId}`);
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  if (aktif.saltOkunur) redirect(donus || `/envanter/${stokId}`);
   const supabase = await createClient();
 
   const { data: satir } = await supabase
     .from('envanter')
     .select('*')
     .eq('stok_id', stokId)
+    .eq('user_id', aktif.kullaniciId)
     .maybeSingle();
 
   if (!satir) notFound();
@@ -31,6 +34,7 @@ export default async function ParcaDuzenleSayfasi({
   const { data: konumVerisi } = await supabase
     .from('locations')
     .select('id, parent_id, ad, kod, tip, aciklama, sira')
+    .eq('user_id', aktif.kullaniciId)
     .order('sira', { ascending: true });
 
   const konumlar = konumSecenekleri(agacKur((konumVerisi ?? []) as Konum[]));

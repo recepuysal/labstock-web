@@ -25,8 +25,9 @@ export default async function ProfilSayfasi() {
 
   let hedefAdi: string | null = null;
   if (profil?.gozlemci_of) {
-    const { data } = await supabase.rpc('gozlemci_hedef_adi');
-    hedefAdi = (data as string | null) ?? 'bağlı hesap';
+    const { data } = await supabase.rpc('gozlemci_hedef_bilgisi');
+    const satir = (Array.isArray(data) ? data[0] : data) as { ad: string | null } | undefined;
+    hedefAdi = satir?.ad ?? 'bağlı hesap';
   }
 
   const etiket = profil?.ad || user.email || '';

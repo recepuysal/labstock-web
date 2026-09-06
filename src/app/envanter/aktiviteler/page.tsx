@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 import { SEBEP_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -8,10 +10,14 @@ const LIMIT = 200;
 
 export default async function AktivitelerSayfasi() {
   const supabase = await createClient();
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  const hedef = aktif.kullaniciId;
 
   const { data: hareketVerisi } = await supabase
     .from('stock_movements')
     .select('id, stock_item_id, delta, sonraki_adet, sebep, aciklama, proje_id, created_at')
+    .eq('user_id', hedef)
     .order('created_at', { ascending: false })
     .limit(LIMIT);
 
@@ -19,14 +25,15 @@ export default async function AktivitelerSayfasi() {
 
   const { data: envanterVerisi } = await supabase
     .from('envanter')
-    .select('stok_id, mpn, konum_kodu, konum_adi');
+    .select('stok_id, mpn, konum_kodu, konum_adi')
+    .eq('user_id', hedef);
   const envanterHarita = new Map(
     ((envanterVerisi ?? []) as Pick<EnvanterSatiri, 'stok_id' | 'mpn' | 'konum_kodu' | 'konum_adi'>[]).map(
       (e) => [e.stok_id, e],
     ),
   );
 
-  const { data: projeler } = await supabase.from('projects').select('id, ad');
+  const { data: projeler } = await supabase.from('projects').select('id, ad').eq('user_id', hedef);
   const projeHarita = new Map((projeler ?? []).map((p) => [p.id, p.ad]));
 
   return (

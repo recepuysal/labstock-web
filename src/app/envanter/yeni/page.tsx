@@ -2,16 +2,19 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ParcaFormu } from '@/components/parca-formu';
 import { agacKur, konumSecenekleri, type Konum } from '@/lib/types';
-import { saltOkunurMu } from '@/lib/gozlemci';
+import { aktifGorunumAl } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
 
 export default async function YeniParcaSayfasi() {
-  if (await saltOkunurMu()) redirect('/envanter');
+  const aktif = await aktifGorunumAl();
+  if (!aktif) redirect('/giris');
+  if (aktif.saltOkunur) redirect('/envanter');
   const supabase = await createClient();
   const { data } = await supabase
     .from('locations')
     .select('id, parent_id, ad, kod, tip, aciklama, sira')
+    .eq('user_id', aktif.kullaniciId)
     .order('sira', { ascending: true });
 
   const konumlar = konumSecenekleri(agacKur((data ?? []) as Konum[]));

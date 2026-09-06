@@ -481,15 +481,17 @@ begin
 end;
 $$;
 
--- gozlemci_hedef_adi: bağlı olduğun kişinin adını (varsa) görüntülemek için.
-create or replace function public.gozlemci_hedef_adi()
-returns text
+-- gozlemci_hedef_bilgisi: bağlı olduğun kişinin adı/fotoğrafı (izleme moduna
+-- geçince üst barda görsel olarak göstermek için — "kimin deposundasın" netliği).
+drop function if exists public.gozlemci_hedef_adi();
+create or replace function public.gozlemci_hedef_bilgisi()
+returns table (ad text, resim_url text)
 language sql
 security definer
 set search_path = public
 stable
 as $$
-  select p2.ad
+  select p2.ad, p2.resim_url
   from public.profiles p1
   join public.profiles p2 on p2.id = p1.gozlemci_of
   where p1.id = auth.uid();

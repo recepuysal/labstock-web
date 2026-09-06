@@ -2,15 +2,20 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Marka } from './marka';
 import { AramaKutusu } from './arama-kutusu';
+import { GorunumSecici } from './gorunum-secici';
 
 export function UstBar({
   bas,
   resimUrl,
   saltOkunur,
+  gozlemciOf,
+  izlenenAdi,
 }: {
   bas?: string;
   resimUrl?: string | null;
   saltOkunur?: boolean;
+  gozlemciOf?: string | null;
+  izlenenAdi?: string | null;
 }) {
   return (
     <header
@@ -35,10 +40,8 @@ export function UstBar({
 
       <div style={{ flex: 1 }} />
 
-      {saltOkunur && (
-        <span className="rozet rozet-notr" title="Sadece görüntüleme yetkin var">
-          Gözlemci
-        </span>
+      {gozlemciOf && (
+        <GorunumSecici izleniyor={Boolean(saltOkunur)} izlenenAdi={izlenenAdi || 'İzlediğim'} />
       )}
 
       {!saltOkunur && (
@@ -103,7 +106,7 @@ export function UstBar({
 
       <Link
         href="/ayarlar/profil"
-        title={bas ? `${bas} — profil` : 'Profil'}
+        title={saltOkunur ? `${izlenenAdi} — izlediğin depo` : bas ? `${bas} — profil` : 'Profil'}
         aria-label="Profil"
         className="mn"
         style={{
@@ -119,6 +122,7 @@ export function UstBar({
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
+          boxShadow: saltOkunur ? '0 0 0 2px var(--copper)' : undefined,
         }}
       >
         {resimUrl ? (
