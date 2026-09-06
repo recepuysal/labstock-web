@@ -68,6 +68,16 @@
   box-sizing: border-box;
 }
 
+.logo-koyu-tema {
+  display: none;
+}
+[data-theme='koyu'] .logo-acik-tema {
+  display: none;
+}
+[data-theme='koyu'] .logo-koyu-tema {
+  display: block;
+}
+
 html,
 body {
   margin: 0;
