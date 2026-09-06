@@ -46,6 +46,19 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
+  console.log('[profil-resmi] user.id:', user.id);
+
+  const { data: kontrolSatiri, error: kontrolHatasi } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+  console.log(
+    '[profil-resmi] kontrol select:',
+    JSON.stringify(kontrolSatiri),
+    'hata:',
+    kontrolHatasi ? kontrolHatasi.message : null,
+  );
 
   const uzanti = dosya.type.split('/')[1] === 'svg+xml' ? 'svg' : dosya.type.split('/')[1];
   const yol = `${user.id}/profil.${uzanti}`;
