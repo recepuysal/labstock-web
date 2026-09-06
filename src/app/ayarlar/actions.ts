@@ -16,15 +16,19 @@ export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): P
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({
+  // update yerine upsert: profiles satırı (tetikleyici çalışmamışsa) hiç
+  // olmayabilir — bu durumda update sessizce 0 satır etkiler, upsert ise
+  // satırı yoksa oluşturur.
+  const { error } = await supabase.from('profiles').upsert(
+    {
+      id: user.id,
       ad: ad || null,
       telefon,
       sirket_adi: sirketAdi,
       sirket_adresi: sirketAdresi,
-    })
-    .eq('id', user.id);
+    },
+    { onConflict: 'id' },
+  );
 
   if (error) return { hata: error.message };
 
@@ -46,19 +50,6 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { hata: 'Oturum bulunamadı.' };
-  console.log('[profil-resmi] user.id:', user.id);
-
-  const { data: kontrolSatiri, error: kontrolHatasi } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', user.id)
-    .maybeSingle();
-  console.log(
-    '[profil-resmi] kontrol select:',
-    JSON.stringify(kontrolSatiri),
-    'hata:',
-    kontrolHatasi ? kontrolHatasi.message : null,
-  );
 
   const uzanti = dosya.type.split('/')[1] === 'svg+xml' ? 'svg' : dosya.type.split('/')[1];
   const yol = `${user.id}/profil.${uzanti}`;
@@ -75,19 +66,13 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
     data: { publicUrl },
   } = supabase.storage.from('profil-resimleri').getPublicUrl(yol);
 
-  const { data: guncellenen, error } = await supabase
+  const { error } = await supabase
     .from('profiles')
-    .update({ resim_url: `${publicUrl}?t=${Date.now()}` })
-    .eq('id', user.id)
-    .select('id, resim_url');
+    .upsert({ id: user.id, resim_url: `${publicUrl}?t=${Date.now()}` }, { onConflict: 'id' });
 
   if (error) {
     console.error('[profil-resmi] guncelleme hatasi:', error);
     return { hata: `Kayıt hatası: ${error.message}` };
-  }
-  console.log('[profil-resmi] guncellendi:', JSON.stringify(guncellenen));
-  if (!guncellenen || guncellenen.length === 0) {
-    return { hata: 'Görsel yüklendi ama profil satırı güncellenemedi (0 satır etkilendi).' };
   }
 
   revalidatePath('/', 'layout');
