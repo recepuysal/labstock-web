@@ -48,7 +48,7 @@ export function HareketHizli({ stokId, adet }: { stokId: string; adet: number })
           disabled={bekliyor}
           onClick={() => gonder(acikYon)}
         >
-          {bekliyor ? '…' : acikYon > 0 ? 'Girişi onayla' : 'Düşüşü onayla'}
+          {bekliyor ? '…' : acikYon > 0 ? 'Eklemeyi onayla' : 'Düşüşü onayla'}
         </button>
         <button type="button" className="btn" onClick={kapat} disabled={bekliyor}>
           Vazgeç
@@ -69,7 +69,7 @@ export function HareketHizli({ stokId, adet }: { stokId: string; adet: number })
         − Stok düş
       </button>
       <button type="button" className="btn" onClick={() => setAcikYon(1)}>
-        + Giriş yap
+        + Stok ekle
       </button>
     </div>
   );
