@@ -19,9 +19,11 @@ create table if not exists public.profiles (
   sirket_adi     text,
   sirket_adresi  text,
   resim_url      text,
-  davet_kodu     text unique,
-  gozlemci_of    uuid references auth.users (id) on delete set null,
-  created_at     timestamptz not null default now()
+  davet_kodu          text unique,
+  gozlemci_of         uuid references auth.users (id) on delete set null,
+  gozlemci_baglandi   timestamptz,
+  son_gorulme         timestamptz,
+  created_at          timestamptz not null default now()
 );
 
 create or replace function public.handle_new_user()
@@ -45,7 +47,7 @@ begin
   if v_davet_kodu is not null and length(trim(v_davet_kodu)) > 0 then
     select id into v_sahip from public.profiles where davet_kodu = upper(trim(v_davet_kodu));
     if v_sahip is not null and v_sahip <> new.id then
-      update public.profiles set gozlemci_of = v_sahip where id = new.id;
+      update public.profiles set gozlemci_of = v_sahip, gozlemci_baglandi = now() where id = new.id;
     end if;
   end if;
 
@@ -475,7 +477,7 @@ begin
     raise exception 'Kendi davet koduna bağlanamazsın';
   end if;
 
-  update public.profiles set gozlemci_of = v_sahip where id = auth.uid();
+  update public.profiles set gozlemci_of = v_sahip, gozlemci_baglandi = now() where id = auth.uid();
 end;
 $$;
 
@@ -491,6 +493,22 @@ as $$
   from public.profiles p1
   join public.profiles p2 on p2.id = p1.gozlemci_of
   where p1.id = auth.uid();
+$$;
+
+-- gozlemcilerimi_listele: seni izleyen hesapları (ad + bağlanma/son görülme
+-- zamanı) listeler — profiles RLS'i başkasının satırını göstermediği için
+-- bu bilgilendirme amaçlı security definer fonksiyon üzerinden veriliyor.
+create or replace function public.gozlemcilerimi_listele()
+returns table (ad text, baglandi timestamptz, son_gorulme timestamptz)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce(p.ad, 'İsimsiz hesap'), p.gozlemci_baglandi, p.son_gorulme
+  from public.profiles p
+  where p.gozlemci_of = auth.uid()
+  order by p.gozlemci_baglandi desc nulls last;
 $$;
 
 -- --------------------------------------------------------- profil resmi

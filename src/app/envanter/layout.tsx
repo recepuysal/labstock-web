@@ -22,6 +22,10 @@ export default async function EnvanterLayout({ children }: { children: React.Rea
     if (profil?.ad) etiket = profil.ad;
     resimUrl = profil?.resim_url ?? null;
     saltOkunur = Boolean(profil?.gozlemci_of);
+
+    // Gözlemcisi olan biri buradaysa, kendisini izleyen kişi Ayarlar'da
+    // "son görülme" bilgisini görebilsin diye dokunuyoruz.
+    await supabase.from('profiles').update({ son_gorulme: new Date().toISOString() }).eq('id', user.id);
   }
 
   return (

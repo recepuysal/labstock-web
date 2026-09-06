@@ -2,8 +2,17 @@
 
 import { useState } from 'react';
 import { davetKoduOlustur } from '@/app/ayarlar/actions';
+import { zamanOnce } from '@/lib/types';
 
-export function GozlemciErisimi({ mevcutKod }: { mevcutKod: string | null }) {
+type Gozlemci = { ad: string; baglandi: string | null; son_gorulme: string | null };
+
+export function GozlemciErisimi({
+  mevcutKod,
+  gozlemciler,
+}: {
+  mevcutKod: string | null;
+  gozlemciler: Gozlemci[];
+}) {
   const [kod, setKod] = useState(mevcutKod);
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
@@ -85,6 +94,32 @@ export function GozlemciErisimi({ mevcutKod }: { mevcutKod: string | null }) {
       {hata && (
         <div className="hata" style={{ marginTop: 10 }}>
           {hata}
+        </div>
+      )}
+
+      {gozlemciler.length > 0 && (
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--line-soft)' }}>
+          <div
+            className="mn"
+            style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
+          >
+            SENİ İZLEYENLER
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {gozlemciler.map((g, i) => (
+              <div
+                key={i}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 12.5, gap: 8 }}
+              >
+                <span style={{ fontWeight: 500 }}>{g.ad}</span>
+                <span style={{ color: 'var(--muted)', fontSize: 11, textAlign: 'right' }}>
+                  {g.baglandi && `${zamanOnce(g.baglandi)} bağlandı`}
+                  {g.baglandi && g.son_gorulme && ' · '}
+                  {g.son_gorulme && `son görülme ${zamanOnce(g.son_gorulme)}`}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
