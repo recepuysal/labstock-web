@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -123,10 +123,24 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (serverProcess) serverProcess.kill();
   app.quit();
 });
 
-app.on('before-quit', () => {
-  if (serverProcess) serverProcess.kill();
+// Uygulama kapanınca oturumu da kapat: çerezleri temizlemeden çıkmıyoruz,
+// bir sonraki açılışta tekrar giriş ekranı gelsin.
+let cikisTemizlendi = false;
+app.on('before-quit', (event) => {
+  if (serverProcess) {
+    serverProcess.kill();
+    serverProcess = null;
+  }
+  if (cikisTemizlendi) return;
+  event.preventDefault();
+  session.defaultSession
+    .clearStorageData({ storages: ['cookies'] })
+    .catch((err) => logYaz(`[cikis-temizleme-hata] ${err.message}`))
+    .finally(() => {
+      cikisTemizlendi = true;
+      app.quit();
+    });
 });
