@@ -30,11 +30,12 @@ export default async function EnvanterSayfasi({
     kategori?: string;
     kilif?: string;
     durum?: string;
+    etiket?: string;
     sira?: string;
     gorunum?: string;
   }>;
 }) {
-  const { q, konum, kategori, kilif, durum, sira, gorunum } = await searchParams;
+  const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = await searchParams;
   const supabase = await createClient();
 
   const { data: konumVerisi } = await supabase
@@ -58,6 +59,17 @@ export default async function EnvanterSayfasi({
   if (kilif) sorgu = sorgu.eq('kilif', kilif);
   if (durum) sorgu = sorgu.eq('durum', durum);
 
+  let etiketliBosSonuc = false;
+  if (etiket) {
+    const { data: etiketliStokVerisi } = await supabase
+      .from('stock_item_tags')
+      .select('stock_item_id, tags!inner(ad)')
+      .eq('tags.ad', etiket);
+    const stokIdleri = (etiketliStokVerisi ?? []).map((r) => r.stock_item_id);
+    if (stokIdleri.length === 0) etiketliBosSonuc = true;
+    else sorgu = sorgu.in('stok_id', stokIdleri);
+  }
+
   switch (sira) {
     case 'eski':
       sorgu = sorgu.order('updated_at', { ascending: true });
@@ -75,7 +87,7 @@ export default async function EnvanterSayfasi({
       sorgu = sorgu.order('updated_at', { ascending: false });
   }
 
-  const { data, error } = await sorgu;
+  const { data, error } = etiketliBosSonuc ? { data: [] as EnvanterSatiri[], error: null } : await sorgu;
   const satirlar = (data ?? []) as EnvanterSatiri[];
 
   const { data: katalogVerisi } = await supabase.from('parts').select('kategori, kilif');
@@ -85,6 +97,9 @@ export default async function EnvanterSayfasi({
   const kiliflar = Array.from(
     new Set((katalogVerisi ?? []).map((p) => p.kilif).filter((v): v is string => Boolean(v))),
   ).sort((a, b) => a.localeCompare(b, 'tr'));
+
+  const { data: etiketVerisi } = await supabase.from('tags').select('ad').order('ad', { ascending: true });
+  const etiketler = (etiketVerisi ?? []).map((t) => t.ad);
 
   const { count: toplamCesit } = await supabase
     .from('stock_items')
@@ -139,6 +154,7 @@ export default async function EnvanterSayfasi({
           <div className="mn" style={{ fontSize: 10.5, color: 'var(--muted-2)' }}>
             Depo / {seciliKonum ? seciliKonum.ad : 'Tüm envanter'}
             {q && ` / "${q}"`}
+            {etiket && ` / #${etiket}`}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 5 }}>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px' }}>
@@ -152,7 +168,7 @@ export default async function EnvanterSayfasi({
 
           <div style={{ marginTop: 12 }}>
             <Suspense fallback={<div style={{ height: 28 }} />}>
-              <EnvanterFiltreleri kategoriler={kategoriler} kiliflar={kiliflar} />
+              <EnvanterFiltreleri kategoriler={kategoriler} kiliflar={kiliflar} etiketler={etiketler} />
             </Suspense>
           </div>
         </div>

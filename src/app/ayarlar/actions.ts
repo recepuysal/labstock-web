@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { EylemDurum } from '@/app/envanter/actions';
+import type { EnvanterSatiri } from '@/lib/types';
 
 export async function profilGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
   const ad = String(formData.get('ad') ?? '').trim();
@@ -77,4 +78,89 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
 
   revalidatePath('/', 'layout');
   return { bilgi: 'Görsel güncellendi.' };
+}
+
+export type DisaAktarSonuc = { hata?: string; csv?: string };
+
+function csvHucre(deger: string | number | null | undefined): string {
+  const s = deger === null || deger === undefined ? '' : String(deger);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+const DURUM_METNI: Record<string, string> = {
+  yeterli: 'Yeterli',
+  az: 'Az kaldı',
+  kritik: 'Kritik',
+  yok: 'Yok',
+};
+
+/** Tüm envanteri CSV metni olarak döndürür — indirme işlemi tarayıcı tarafında yapılır. */
+export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { data, error } = await supabase.from('envanter').select('*').order('mpn', { ascending: true });
+  if (error) return { hata: error.message };
+  const satirlar = (data ?? []) as EnvanterSatiri[];
+
+  const { data: etiketVerisi } = await supabase.from('stock_item_tags').select('stock_item_id, tags(ad)');
+  const etiketHaritasi = new Map<string, string[]>();
+  for (const row of etiketVerisi ?? []) {
+    const ad = (row.tags as unknown as { ad: string } | null)?.ad;
+    if (!ad) continue;
+    const liste = etiketHaritasi.get(row.stock_item_id) ?? [];
+    liste.push(ad);
+    etiketHaritasi.set(row.stock_item_id, liste);
+  }
+
+  const basliklar = [
+    'MPN',
+    'Üretici',
+    'Açıklama',
+    'Kategori',
+    'Kılıf',
+    'RoHS',
+    'Konum',
+    'Adet',
+    'Min. Adet',
+    'Durum',
+    'Tedarikçi',
+    'Tedarikçi Kodu',
+    'Alış Fiyatı',
+    'Para Birimi',
+    'Datasheet URL',
+    'Etiketler',
+    'Son Güncelleme',
+  ];
+
+  const satirMetinleri = satirlar.map((s) =>
+    [
+      s.mpn,
+      s.uretici,
+      s.aciklama,
+      s.kategori,
+      s.kilif,
+      s.rohs === true ? 'Evet' : s.rohs === false ? 'Hayır' : '',
+      s.konum_adi,
+      s.adet,
+      s.min_adet,
+      DURUM_METNI[s.durum] ?? s.durum,
+      s.tedarikci,
+      s.tedarikci_kodu,
+      s.alis_fiyati,
+      s.para_birimi,
+      s.datasheet_url,
+      (etiketHaritasi.get(s.stok_id) ?? []).join('; '),
+      s.updated_at ? new Date(s.updated_at).toLocaleString('tr-TR') : '',
+    ]
+      .map(csvHucre)
+      .join(','),
+  );
+
+  const csv = [basliklar.join(','), ...satirMetinleri].join('\r\n');
+  return { csv };
 }

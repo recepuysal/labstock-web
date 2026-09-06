@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { parcaEkle, parcaGuncelle, type EylemDurum } from '@/app/envanter/actions';
 import { parametrelerToMetin } from '@/lib/types';
 
@@ -53,6 +54,14 @@ export function ParcaFormu({ konumlar, mod = 'ekle', baslangic, donus }: Props) 
   const duzenle = mod === 'duzenle';
   const eylem = duzenle ? parcaGuncelle : parcaEkle;
   const [durum, gonder, bekliyor] = useActionState<EylemDurum, FormData>(eylem, {});
+  const router = useRouter();
+
+  useEffect(() => {
+    if (durum.bilgi) {
+      router.push(donus || '/envanter');
+      router.refresh();
+    }
+  }, [durum.bilgi, donus, router]);
 
   return (
     <form action={gonder} className="kart" style={{ padding: 22 }}>

@@ -185,7 +185,7 @@ export async function parcaEkle(_onceki: EylemDurum, formData: FormData): Promis
   }
 
   revalidatePath('/envanter');
-  redirect('/envanter');
+  return { bilgi: 'Eklendi.' };
 }
 
 export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
@@ -246,7 +246,7 @@ export async function parcaGuncelle(_onceki: EylemDurum, formData: FormData): Pr
   const donus = String(formData.get('donus') ?? '') || '/envanter';
   revalidatePath('/envanter');
   revalidatePath(donus);
-  redirect(donus);
+  return { bilgi: 'Güncellendi.' };
 }
 
 /** Parçayı bir projenin BOM'una ekler/günceller; proje yeni ise önce oluşturur. */
@@ -342,6 +342,61 @@ export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promi
   }
   const { error: stokHatasi } = await supabase.from('stock_items').update(stokGuncelleme).eq('id', stokId);
   if (stokHatasi) return { hata: stokHatasi.message };
+
+  revalidatePath(`/envanter/${stokId}`);
+  return {};
+}
+
+/** Bir stok kalemine etiket ekler; etiket kullanıcıda yoksa önce oluşturur. */
+export async function etiketEkle(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const stokId = String(formData.get('stok_id') ?? '');
+  const ad = String(formData.get('etiket_adi') ?? '').trim();
+  if (!stokId || !ad) return { hata: 'Etiket adı gerekli.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { data: mevcutEtiket, error: aramaHatasi } = await supabase
+    .from('tags')
+    .select('id')
+    .eq('user_id', user.id)
+    .ilike('ad', ad)
+    .limit(1)
+    .maybeSingle();
+  if (aramaHatasi) return { hata: aramaHatasi.message };
+
+  let etiketId = mevcutEtiket?.id as string | undefined;
+  if (!etiketId) {
+    const { data: yeniEtiket, error: ekleHatasi } = await supabase
+      .from('tags')
+      .insert({ user_id: user.id, ad })
+      .select('id')
+      .single();
+    if (ekleHatasi) return { hata: ekleHatasi.message };
+    etiketId = yeniEtiket.id;
+  }
+
+  const { error } = await supabase
+    .from('stock_item_tags')
+    .upsert({ stock_item_id: stokId, tag_id: etiketId }, { onConflict: 'stock_item_id,tag_id' });
+  if (error) return { hata: error.message };
+
+  revalidatePath(`/envanter/${stokId}`);
+  return {};
+}
+
+/** Bir stok kaleminden etiketi kaldırır (etiketin kendisi silinmez, listede kalır). */
+export async function etiketSil(stokId: string, tagId: string): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('stock_item_tags')
+    .delete()
+    .eq('stock_item_id', stokId)
+    .eq('tag_id', tagId);
+  if (error) return { hata: error.message };
 
   revalidatePath(`/envanter/${stokId}`);
   return {};

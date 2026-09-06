@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Hakkinda } from '@/components/hakkinda';
+import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,8 @@ export default async function AyarlarSayfasi() {
           </div>
           <TemaAnahtari />
         </div>
+
+        <DisaAktarButonu />
 
         <Hakkinda />
       </div>

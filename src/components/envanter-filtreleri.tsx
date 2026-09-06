@@ -14,9 +14,11 @@ const SIRALAMALAR = [
 export function EnvanterFiltreleri({
   kategoriler,
   kiliflar,
+  etiketler,
 }: {
   kategoriler: string[];
   kiliflar: string[];
+  etiketler: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -25,6 +27,7 @@ export function EnvanterFiltreleri({
   const kategori = searchParams.get('kategori') ?? '';
   const kilif = searchParams.get('kilif') ?? '';
   const durum = searchParams.get('durum') ?? '';
+  const etiket = searchParams.get('etiket') ?? '';
   const sira = searchParams.get('sira') ?? 'yeni';
   const gorunum = searchParams.get('gorunum') ?? 'liste';
 
@@ -35,7 +38,7 @@ export function EnvanterFiltreleri({
     router.replace(`${pathname}?${p.toString()}`);
   }
 
-  const filtreliyiz = Boolean(kategori || kilif || durum);
+  const filtreliyiz = Boolean(kategori || kilif || durum || etiket);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
@@ -63,12 +66,23 @@ export function EnvanterFiltreleri({
 
       <select className="filtre" value={durum} onChange={(e) => guncelle('durum', e.target.value)}>
         <option value="">Tüm durumlar</option>
-        {Object.entries(DURUM_ETIKET).map(([deger, etiket]) => (
+        {Object.entries(DURUM_ETIKET).map(([deger, metin]) => (
           <option key={deger} value={deger}>
-            {etiket}
+            {metin}
           </option>
         ))}
       </select>
+
+      {etiketler.length > 0 && (
+        <select className="filtre" value={etiket} onChange={(e) => guncelle('etiket', e.target.value)}>
+          <option value="">Tüm etiketler</option>
+          {etiketler.map((e) => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
+        </select>
+      )}
 
       {filtreliyiz && (
         <button
@@ -80,6 +94,7 @@ export function EnvanterFiltreleri({
             p.delete('kategori');
             p.delete('kilif');
             p.delete('durum');
+            p.delete('etiket');
             router.replace(`${pathname}?${p.toString()}`);
           }}
         >

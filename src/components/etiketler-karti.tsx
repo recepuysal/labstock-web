@@ -1,0 +1,108 @@
+'use client';
+
+import { useActionState, useRef, useTransition } from 'react';
+import { etiketEkle, etiketSil, type EylemDurum } from '@/app/envanter/actions';
+
+type Etiket = { id: string; ad: string };
+
+export function EtiketlerKarti({
+  stokId,
+  etiketler,
+  oneriler,
+}: {
+  stokId: string;
+  etiketler: Etiket[];
+  oneriler: string[];
+}) {
+  const [durum, gonder, ekleniyor] = useActionState<EylemDurum, FormData>(etiketEkle, {});
+  const [siliniyor, basla] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function sil(tagId: string) {
+    basla(async () => {
+      await etiketSil(stokId, tagId);
+    });
+  }
+
+  return (
+    <div className="kart" style={{ padding: 16 }}>
+      <div
+        className="mn"
+        style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--muted-2)', marginBottom: 10 }}
+      >
+        ETİKETLER
+      </div>
+
+      {etiketler.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+          {etiketler.map((e) => (
+            <span
+              key={e.id}
+              className="rozet rozet-notr"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              {e.ad}
+              <button
+                type="button"
+                onClick={() => sil(e.id)}
+                disabled={siliniyor}
+                aria-label={`${e.ad} etiketini kaldır`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 13,
+                  height: 13,
+                  padding: 0,
+                  border: 'none',
+                  background: 'none',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {etiketler.length === 0 && (
+        <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>Henüz etiket yok.</p>
+      )}
+
+      <form
+        ref={formRef}
+        action={(fd) => {
+          gonder(fd);
+          formRef.current?.reset();
+        }}
+        style={{ display: 'flex', gap: 6 }}
+      >
+        <input type="hidden" name="stok_id" value={stokId} />
+        <input
+          className="alan"
+          style={{ height: 30, fontSize: 12 }}
+          name="etiket_adi"
+          placeholder="+ etiket ekle"
+          list="etiket-onerileri"
+          autoComplete="off"
+        />
+        <datalist id="etiket-onerileri">
+          {oneriler.map((ad) => (
+            <option key={ad} value={ad} />
+          ))}
+        </datalist>
+        <button className="btn" style={{ height: 30, fontSize: 12, flexShrink: 0 }} type="submit" disabled={ekleniyor}>
+          {ekleniyor ? '…' : 'Ekle'}
+        </button>
+      </form>
+      {durum.hata && (
+        <div className="hata" style={{ marginTop: 8, fontSize: 11.5, padding: '6px 9px' }}>
+          {durum.hata}
+        </div>
+      )}
+    </div>
+  );
+}

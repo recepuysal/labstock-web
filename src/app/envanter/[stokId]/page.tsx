@@ -6,6 +6,7 @@ import { HareketHizli } from '@/components/hareket-hizli';
 import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
+import { EtiketlerKarti } from '@/components/etiketler-karti';
 import {
   DURUM_ETIKET,
   paraFormatla,
@@ -109,6 +110,18 @@ export default async function ParcaDetaySayfasi({
     .from('stock_movements')
     .select('id', { count: 'exact', head: true })
     .eq('stock_item_id', s.stok_id);
+
+  const { data: etiketVerisi } = await supabase
+    .from('stock_item_tags')
+    .select('tag_id, tags(id, ad)')
+    .eq('stock_item_id', s.stok_id);
+  const etiketler = (etiketVerisi ?? [])
+    .map((e) => e.tags as unknown as { id: string; ad: string } | null)
+    .filter((t): t is { id: string; ad: string } => Boolean(t))
+    .sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
+
+  const { data: tumEtiketVerisi } = await supabase.from('tags').select('ad').order('ad', { ascending: true });
+  const etiketOnerileri = (tumEtiketVerisi ?? []).map((t) => t.ad);
 
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 40px' }}>
@@ -374,6 +387,8 @@ export default async function ParcaDetaySayfasi({
 
               <ProjeEkleFormu partId={s.part_id} projeler={projeler ?? []} donus={donus} />
             </div>
+
+            <EtiketlerKarti stokId={s.stok_id} etiketler={etiketler} oneriler={etiketOnerileri} />
           </div>
         </div>
       </div>
