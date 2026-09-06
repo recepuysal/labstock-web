@@ -5,6 +5,7 @@ import { SatirMenu } from '@/components/satir-menu';
 import { HareketHizli } from '@/components/hareket-hizli';
 import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
+import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import {
   DURUM_ETIKET,
   paraFormatla,
@@ -158,6 +159,7 @@ export default async function ParcaDetaySayfasi({
                   Datasheet
                 </a>
               )}
+              <LcscCekFormu stokId={s.stok_id} partId={s.part_id} mevcutKod={s.tedarikci_kodu} />
               <SatirMenu stokId={s.stok_id} mpn={s.mpn} />
             </div>
 
@@ -289,6 +291,17 @@ export default async function ParcaDetaySayfasi({
           </div>
 
           <div style={{ flex: '1 1 280px', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {s.resim_url && (
+              <div className="kart" style={{ padding: 12 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={s.resim_url}
+                  alt={s.mpn}
+                  style={{ width: '100%', borderRadius: 'var(--r-sm)', display: 'block' }}
+                />
+              </div>
+            )}
+
             <KonumHaritasi konumlar={konumlar} konumId={s.konum_id} sayilar={sayilar} />
 
             {(s.tedarikci || s.alis_fiyati != null) && (

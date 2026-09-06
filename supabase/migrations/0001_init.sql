@@ -54,6 +54,7 @@ create table if not exists public.parts (
   datasheet_url text,
   parametreler  jsonb not null default '{}'::jsonb,
   rohs          boolean,
+  resim_url     text,
   olusturan     uuid references auth.users (id) on delete set null,
   created_at    timestamptz not null default now()
 );
@@ -331,6 +332,7 @@ select
   p.datasheet_url,
   p.parametreler,
   p.rohs,
+  p.resim_url,
   l.id             as konum_id,
   l.kod            as konum_kodu,
   l.ad             as konum_adi,

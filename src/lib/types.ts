@@ -19,6 +19,7 @@ export type EnvanterSatiri = {
   datasheet_url: string | null;
   parametreler: Record<string, string>;
   rohs: boolean | null;
+  resim_url: string | null;
   konum_id: string | null;
   konum_kodu: string | null;
   konum_adi: string | null;

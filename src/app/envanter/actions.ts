@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { metinToParametreler } from '@/lib/types';
+import { lcscKoduGetir } from '@/lib/lcsc';
 
 export type EylemDurum = { hata?: string; bilgi?: string };
 
@@ -300,5 +301,48 @@ export async function projedenCikar(bomId: string, donus: string): Promise<Eylem
   if (error) return { hata: error.message };
 
   revalidatePath(donus);
+  return {};
+}
+
+/** LCSC ürün sayfasından üretici/açıklama/kategori/kılıf/datasheet/resim/parametreleri çekip kaydeder. */
+export async function lcscdenCek(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const stokId = String(formData.get('stok_id') ?? '');
+  const partId = String(formData.get('part_id') ?? '');
+  const kod = String(formData.get('lcsc_kodu') ?? '').trim();
+  if (!stokId || !partId) return { hata: 'Geçersiz kayıt.' };
+  if (!kod) return { hata: 'LCSC kodu gerekli (ör. C25804).' };
+
+  let veri;
+  try {
+    veri = await lcscKoduGetir(kod);
+  } catch (err) {
+    return { hata: err instanceof Error ? err.message : 'LCSC verisi alınamadı.' };
+  }
+
+  const supabase = await createClient();
+
+  const partGuncelleme: Record<string, unknown> = {};
+  if (veri.uretici) partGuncelleme.uretici = veri.uretici;
+  if (veri.aciklama) partGuncelleme.aciklama = veri.aciklama;
+  if (veri.kategori) partGuncelleme.kategori = veri.kategori;
+  if (veri.kilif) partGuncelleme.kilif = veri.kilif;
+  if (veri.datasheetUrl) partGuncelleme.datasheet_url = veri.datasheetUrl;
+  if (veri.resimUrl) partGuncelleme.resim_url = veri.resimUrl;
+  if (Object.keys(veri.parametreler).length > 0) partGuncelleme.parametreler = veri.parametreler;
+
+  if (Object.keys(partGuncelleme).length > 0) {
+    const { error } = await supabase.from('parts').update(partGuncelleme).eq('id', partId);
+    if (error) return { hata: error.message };
+  }
+
+  const stokGuncelleme: Record<string, unknown> = { tedarikci: 'LCSC', tedarikci_kodu: kod };
+  if (veri.fiyat != null) {
+    stokGuncelleme.alis_fiyati = veri.fiyat;
+    stokGuncelleme.para_birimi = veri.paraBirimi;
+  }
+  const { error: stokHatasi } = await supabase.from('stock_items').update(stokGuncelleme).eq('id', stokId);
+  if (stokHatasi) return { hata: stokHatasi.message };
+
+  revalidatePath(`/envanter/${stokId}`);
   return {};
 }
