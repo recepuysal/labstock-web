@@ -7,6 +7,7 @@ import { KonumHaritasi } from '@/components/konum-haritasi';
 import { ProjeEkleFormu } from '@/components/proje-ekle-formu';
 import { LcscCekFormu } from '@/components/lcsc-cek-formu';
 import { EtiketlerKarti } from '@/components/etiketler-karti';
+import { saltOkunurMu } from '@/lib/gozlemci';
 import {
   DURUM_ETIKET,
   paraFormatla,
@@ -60,6 +61,7 @@ export default async function ParcaDetaySayfasi({
   const { stokId } = await params;
   const { tumu } = await searchParams;
   const supabase = await createClient();
+  const saltOkunur = await saltOkunurMu();
 
   const { data: satir } = await supabase
     .from('envanter')
@@ -163,10 +165,12 @@ export default async function ParcaDetaySayfasi({
             )}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 }}>
-              <HareketHizli stokId={s.stok_id} adet={s.adet} />
-              <Link href={`/envanter/${s.stok_id}/duzenle?donus=${encodeURIComponent(donus)}`} className="btn">
-                Konum değiştir
-              </Link>
+              {!saltOkunur && <HareketHizli stokId={s.stok_id} adet={s.adet} />}
+              {!saltOkunur && (
+                <Link href={`/envanter/${s.stok_id}/duzenle?donus=${encodeURIComponent(donus)}`} className="btn">
+                  Konum değiştir
+                </Link>
+              )}
               {s.datasheet_url && (
                 <a href={s.datasheet_url} target="_blank" rel="noopener noreferrer" className="btn">
                   Datasheet
@@ -182,8 +186,10 @@ export default async function ParcaDetaySayfasi({
                   LCSC&apos;de gör
                 </a>
               )}
-              <LcscCekFormu stokId={s.stok_id} partId={s.part_id} mevcutKod={s.tedarikci_kodu} />
-              <SatirMenu stokId={s.stok_id} mpn={s.mpn} />
+              {!saltOkunur && (
+                <LcscCekFormu stokId={s.stok_id} partId={s.part_id} mevcutKod={s.tedarikci_kodu} />
+              )}
+              {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
             </div>
 
             <div
@@ -385,10 +391,17 @@ export default async function ParcaDetaySayfasi({
                 </p>
               )}
 
-              <ProjeEkleFormu partId={s.part_id} projeler={projeler ?? []} donus={donus} />
+              {!saltOkunur && (
+                <ProjeEkleFormu partId={s.part_id} projeler={projeler ?? []} donus={donus} />
+              )}
             </div>
 
-            <EtiketlerKarti stokId={s.stok_id} etiketler={etiketler} oneriler={etiketOnerileri} />
+            <EtiketlerKarti
+              stokId={s.stok_id}
+              etiketler={etiketler}
+              oneriler={etiketOnerileri}
+              saltOkunur={saltOkunur}
+            />
           </div>
         </div>
       </div>

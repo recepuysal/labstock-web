@@ -162,3 +162,61 @@ export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
   const arabellek = XLSX.write(kitap, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
   return { xlsxTaban64: arabellek.toString('base64') };
 }
+
+const KOD_ALFABE = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 0/O, 1/I/L gibi karışabilecek karakterler hariç
+
+function rastgeleKod(uzunluk = 8): string {
+  let kod = '';
+  for (let i = 0; i < uzunluk; i++) kod += KOD_ALFABE[Math.floor(Math.random() * KOD_ALFABE.length)];
+  return kod;
+}
+
+export type DavetKoduSonuc = { hata?: string; kod?: string };
+
+/** Bu kullanıcı için yeni bir gözlemci davet kodu üretir (varsa öncekinin yerine geçer). */
+export async function davetKoduOlustur(): Promise<DavetKoduSonuc> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  for (let deneme = 0; deneme < 5; deneme++) {
+    const kod = rastgeleKod();
+    const { error } = await supabase.from('profiles').upsert({ id: user.id, davet_kodu: kod }, { onConflict: 'id' });
+    if (!error) {
+      revalidatePath('/ayarlar');
+      return { kod };
+    }
+    if (error.code !== '23505') return { hata: error.message };
+  }
+  return { hata: 'Kod oluşturulamadı, tekrar dene.' };
+}
+
+/** Girilen davet koduyla, kodun sahibinin gözlemcisi olur (salt-okunur erişim). */
+export async function davetKoduIleBaglan(_onceki: EylemDurum, formData: FormData): Promise<EylemDurum> {
+  const kod = String(formData.get('kod') ?? '').trim();
+  if (!kod) return { hata: 'Davet kodu gerekli.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('gozlemci_baglan', { p_kod: kod });
+  if (error) return { hata: error.message };
+
+  revalidatePath('/', 'layout');
+  return { bilgi: 'Bağlantı kuruldu.' };
+}
+
+/** Gözlemcilik bağlantısını kaldırır — kendi hesabına dönersin. */
+export async function gozlemcilikKaldir(): Promise<EylemDurum> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { hata: 'Oturum bulunamadı.' };
+
+  const { error } = await supabase.from('profiles').update({ gozlemci_of: null }).eq('id', user.id);
+  if (error) return { hata: error.message };
+
+  revalidatePath('/', 'layout');
+  return { bilgi: 'Bağlantı kaldırıldı.' };
+}

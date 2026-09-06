@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { TemaAnahtari } from '@/components/tema-anahtari';
 import { Hakkinda } from '@/components/hakkinda';
 import { DisaAktarButonu } from '@/components/disa-aktar-butonu';
+import { GozlemciErisimi } from '@/components/gozlemci-erisimi';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,12 @@ export default async function AyarlarSayfasi() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/giris');
+
+  const { data: profil } = await supabase
+    .from('profiles')
+    .select('davet_kodu')
+    .eq('id', user.id)
+    .maybeSingle();
 
   return (
     <main style={{ minHeight: '100vh', overflowY: 'auto', padding: '24px 20px' }}>
@@ -45,6 +52,8 @@ export default async function AyarlarSayfasi() {
           </div>
           <TemaAnahtari />
         </div>
+
+        <GozlemciErisimi mevcutKod={profil?.davet_kodu ?? null} />
 
         <DisaAktarButonu />
 

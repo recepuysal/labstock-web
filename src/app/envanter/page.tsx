@@ -5,6 +5,7 @@ import { KonumAgaci } from '@/components/konum-agaci';
 import { ParcaTablosu } from '@/components/parca-tablosu';
 import { ParcaIzgara } from '@/components/parca-izgara';
 import { EnvanterFiltreleri } from '@/components/envanter-filtreleri';
+import { saltOkunurMu } from '@/lib/gozlemci';
 import {
   agacKur,
   altAgacIdleri,
@@ -37,6 +38,7 @@ export default async function EnvanterSayfasi({
 }) {
   const { q, konum, kategori, kilif, durum, etiket, sira, gorunum } = await searchParams;
   const supabase = await createClient();
+  const saltOkunur = await saltOkunurMu();
 
   const { data: konumVerisi } = await supabase
     .from('locations')
@@ -147,6 +149,7 @@ export default async function EnvanterSayfasi({
           toplam={toplamCesit ?? 0}
           sayilar={sayilar}
           tipOzeti={tipOzeti}
+          saltOkunur={saltOkunur}
         />
 
         <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -180,17 +183,20 @@ export default async function EnvanterSayfasi({
             <div className="kart" style={{ padding: 28, maxWidth: 560 }}>
               <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 600 }}>Depon henüz boş</h2>
               <p style={{ margin: '0 0 18px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
-                Önce bir konum oluştur (oda, dolap, çekmece — ne istersen) ya da doğrudan ilk
-                parçanı ekleyebilirsin.
+                {saltOkunur
+                  ? 'İzlediğin depo henüz boş.'
+                  : 'Önce bir konum oluştur (oda, dolap, çekmece — ne istersen) ya da doğrudan ilk parçanı ekleyebilirsin.'}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Link href="/envanter/konum-ekle" className="btn btn-birincil">
-                  Konum ekle
-                </Link>
-                <Link href="/envanter/yeni" className="btn">
-                  Parça ekle
-                </Link>
-              </div>
+              {!saltOkunur && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Link href="/envanter/konum-ekle" className="btn btn-birincil">
+                    Konum ekle
+                  </Link>
+                  <Link href="/envanter/yeni" className="btn">
+                    Parça ekle
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -199,13 +205,19 @@ export default async function EnvanterSayfasi({
               <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
                 {q || konum || kategori || kilif || durum
                   ? 'Bu filtreye uyan parça yok.'
-                  : 'Bu depoda henüz parça yok — sağ üstten ekleyebilirsin.'}
+                  : saltOkunur
+                    ? 'Bu depoda henüz parça yok.'
+                    : 'Bu depoda henüz parça yok — sağ üstten ekleyebilirsin.'}
               </p>
             </div>
           )}
 
-          {!error && satirlar.length > 0 && gorunum === 'izgara' && <ParcaIzgara satirlar={satirlar} />}
-          {!error && satirlar.length > 0 && gorunum !== 'izgara' && <ParcaTablosu satirlar={satirlar} />}
+          {!error && satirlar.length > 0 && gorunum === 'izgara' && (
+            <ParcaIzgara satirlar={satirlar} saltOkunur={saltOkunur} />
+          )}
+          {!error && satirlar.length > 0 && gorunum !== 'izgara' && (
+            <ParcaTablosu satirlar={satirlar} saltOkunur={saltOkunur} />
+          )}
         </div>
         </main>
       </div>

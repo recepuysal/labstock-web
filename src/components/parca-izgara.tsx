@@ -3,7 +3,13 @@ import { AdetButonlari } from './adet-butonlari';
 import { SatirMenu } from './satir-menu';
 import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
 
-export function ParcaIzgara({ satirlar }: { satirlar: EnvanterSatiri[] }) {
+export function ParcaIzgara({
+  satirlar,
+  saltOkunur,
+}: {
+  satirlar: EnvanterSatiri[];
+  saltOkunur?: boolean;
+}) {
   return (
     <div
       style={{
@@ -49,7 +55,7 @@ export function ParcaIzgara({ satirlar }: { satirlar: EnvanterSatiri[] }) {
                 </div>
               )}
             </div>
-            <SatirMenu stokId={s.stok_id} mpn={s.mpn} />
+            {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -109,7 +115,7 @@ export function ParcaIzgara({ satirlar }: { satirlar: EnvanterSatiri[] }) {
                 {DURUM_ETIKET[s.durum]}
               </span>
             </div>
-            <AdetButonlari stokId={s.stok_id} adet={s.adet} />
+            {!saltOkunur && <AdetButonlari stokId={s.stok_id} adet={s.adet} />}
           </div>
         </div>
       ))}

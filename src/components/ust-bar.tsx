@@ -3,7 +3,15 @@ import Link from 'next/link';
 import { Marka } from './marka';
 import { AramaKutusu } from './arama-kutusu';
 
-export function UstBar({ bas, resimUrl }: { bas?: string; resimUrl?: string | null }) {
+export function UstBar({
+  bas,
+  resimUrl,
+  saltOkunur,
+}: {
+  bas?: string;
+  resimUrl?: string | null;
+  saltOkunur?: boolean;
+}) {
   return (
     <header
       style={{
@@ -27,39 +35,49 @@ export function UstBar({ bas, resimUrl }: { bas?: string; resimUrl?: string | nu
 
       <div style={{ flex: 1 }} />
 
-      <Link href="/envanter/ice-aktar" className="btn">
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
-          <path d="M12 11v6" />
-          <path d="M9.5 14.5 12 17l2.5-2.5" />
-        </svg>
-        Excel içe aktar
-      </Link>
+      {saltOkunur && (
+        <span className="rozet rozet-notr" title="Sadece görüntüleme yetkin var">
+          Gözlemci
+        </span>
+      )}
 
-      <Link href="/envanter/yeni" className="btn btn-birincil">
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-        >
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Parça ekle
-      </Link>
+      {!saltOkunur && (
+        <>
+          <Link href="/envanter/ice-aktar" className="btn">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+              <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+              <path d="M12 11v6" />
+              <path d="M9.5 14.5 12 17l2.5-2.5" />
+            </svg>
+            Excel içe aktar
+          </Link>
+
+          <Link href="/envanter/yeni" className="btn btn-birincil">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Parça ekle
+          </Link>
+        </>
+      )}
 
       <Link
         href="/ayarlar"

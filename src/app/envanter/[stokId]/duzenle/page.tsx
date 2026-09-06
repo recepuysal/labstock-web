@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ParcaFormu, type ParcaBaslangic } from '@/components/parca-formu';
 import { agacKur, konumSecenekleri, type EnvanterSatiri, type Konum } from '@/lib/types';
+import { saltOkunurMu } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ export default async function ParcaDuzenleSayfasi({
 }) {
   const { stokId } = await params;
   const { donus } = await searchParams;
+  if (await saltOkunurMu()) redirect(donus || `/envanter/${stokId}`);
   const supabase = await createClient();
 
   const { data: satir } = await supabase

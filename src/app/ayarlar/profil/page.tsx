@@ -5,6 +5,7 @@ import { ProfilFormu } from '@/components/profil-formu';
 import { ProfilResmiFormu } from '@/components/profil-resmi-formu';
 import { cikisYap } from '@/app/auth-actions';
 import { basHarfleri } from '@/lib/types';
+import { GozlemcilikKarti } from '@/components/gozlemcilik-karti';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,15 @@ export default async function ProfilSayfasi() {
 
   const { data: profil } = await supabase
     .from('profiles')
-    .select('ad, telefon, sirket_adi, sirket_adresi, resim_url')
+    .select('ad, telefon, sirket_adi, sirket_adresi, resim_url, gozlemci_of')
     .eq('id', user.id)
     .maybeSingle();
+
+  let hedefAdi: string | null = null;
+  if (profil?.gozlemci_of) {
+    const { data } = await supabase.rpc('gozlemci_hedef_adi');
+    hedefAdi = (data as string | null) ?? 'bağlı hesap';
+  }
 
   const etiket = profil?.ad || user.email || '';
 
@@ -54,6 +61,8 @@ export default async function ProfilSayfasi() {
             sirket_adresi: profil?.sirket_adresi ?? null,
           }}
         />
+
+        <GozlemcilikKarti hedefAdi={hedefAdi} />
 
         <form action={cikisYap} style={{ marginTop: 16 }}>
           <button type="submit" className="btn" style={{ width: '100%' }}>

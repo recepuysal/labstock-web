@@ -19,6 +19,8 @@ create table if not exists public.profiles (
   sirket_adi     text,
   sirket_adresi  text,
   resim_url      text,
+  davet_kodu     text unique,
+  gozlemci_of    uuid references auth.users (id) on delete set null,
   created_at     timestamptz not null default now()
 );
 
@@ -307,6 +309,52 @@ create policy stock_item_tags_own on public.stock_item_tags
     )
   );
 
+-- --------------------------------------------------------- gözlemci (salt-okunur izleyici)
+-- Bir kullanıcı davet koduyla başka birinin gözlemcisi olabilir (profiles.gozlemci_of).
+-- Mevcut "_own" politikalarına dokunmadan, sadece SELECT için ek bir politika
+-- ekliyoruz — Postgres'te aynı komut için birden fazla permissive politika OR'lanır.
+
+drop policy if exists locations_gozlemci_read on public.locations;
+create policy locations_gozlemci_read on public.locations
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists projects_gozlemci_read on public.projects;
+create policy projects_gozlemci_read on public.projects
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists stock_items_gozlemci_read on public.stock_items;
+create policy stock_items_gozlemci_read on public.stock_items
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists stock_movements_gozlemci_read on public.stock_movements;
+create policy stock_movements_gozlemci_read on public.stock_movements
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists project_bom_gozlemci_read on public.project_bom;
+create policy project_bom_gozlemci_read on public.project_bom
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists tags_gozlemci_read on public.tags;
+create policy tags_gozlemci_read on public.tags
+  for select to authenticated
+  using (user_id = (select gozlemci_of from public.profiles where id = (select auth.uid())));
+
+drop policy if exists stock_item_tags_gozlemci_read on public.stock_item_tags;
+create policy stock_item_tags_gozlemci_read on public.stock_item_tags
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.stock_items si
+      where si.id = stock_item_id
+        and si.user_id = (select gozlemci_of from public.profiles where id = (select auth.uid()))
+    )
+  );
+
 -- ------------------------------------------------------------- envanter view
 -- Liste ekranının tek sorguluk kaynağı. security_invoker: RLS çağıranın
 -- kimliğiyle uygulanır, view bir yetki kaçağı olmaz.
@@ -388,6 +436,46 @@ begin
 
   return v_yeni;
 end;
+$$;
+
+-- --------------------------------------------------------- gözlemci RPC'leri
+-- gozlemci_baglan: davet kodunu, sahibinin profil satırını hiç açığa çıkarmadan
+-- doğrulayıp bağlantıyı kurar (security definer — çağıranın RLS'i profiles'ta
+-- başkasının satırını görmesine izin vermez, bu fonksiyon bunu güvenle atlar).
+create or replace function public.gozlemci_baglan(p_kod text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_sahip uuid;
+begin
+  select id into v_sahip from public.profiles where davet_kodu = upper(trim(p_kod));
+
+  if v_sahip is null then
+    raise exception 'Geçersiz davet kodu';
+  end if;
+  if v_sahip = auth.uid() then
+    raise exception 'Kendi davet koduna bağlanamazsın';
+  end if;
+
+  update public.profiles set gozlemci_of = v_sahip where id = auth.uid();
+end;
+$$;
+
+-- gozlemci_hedef_adi: bağlı olduğun kişinin adını (varsa) görüntülemek için.
+create or replace function public.gozlemci_hedef_adi()
+returns text
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select p2.ad
+  from public.profiles p1
+  join public.profiles p2 on p2.id = p1.gozlemci_of
+  where p1.id = auth.uid();
 $$;
 
 -- --------------------------------------------------------- profil resmi

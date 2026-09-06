@@ -5,7 +5,13 @@ import { DURUM_ETIKET, sayi, type EnvanterSatiri } from '@/lib/types';
 
 const SUTUNLAR = '30px minmax(0,1fr) 122px 88px 96px 82px 150px 60px 30px';
 
-export function ParcaTablosu({ satirlar }: { satirlar: EnvanterSatiri[] }) {
+export function ParcaTablosu({
+  satirlar,
+  saltOkunur,
+}: {
+  satirlar: EnvanterSatiri[];
+  saltOkunur?: boolean;
+}) {
   return (
     <div className="kart" style={{ overflow: 'hidden' }}>
       <div
@@ -126,8 +132,8 @@ export function ParcaTablosu({ satirlar }: { satirlar: EnvanterSatiri[] }) {
             </span>
           </div>
 
-          <AdetButonlari stokId={s.stok_id} adet={s.adet} />
-          <SatirMenu stokId={s.stok_id} mpn={s.mpn} />
+          {!saltOkunur && <AdetButonlari stokId={s.stok_id} adet={s.adet} />}
+          {!saltOkunur && <SatirMenu stokId={s.stok_id} mpn={s.mpn} />}
         </div>
       ))}
     </div>

@@ -105,6 +105,7 @@ export function KonumAgaci({
   toplam,
   sayilar,
   tipOzeti,
+  saltOkunur,
 }: {
   agac: KonumDugumu[];
   seciliId?: string;
@@ -112,6 +113,7 @@ export function KonumAgaci({
   toplam: number;
   sayilar: Record<string, number>;
   tipOzeti?: string;
+  saltOkunur?: boolean;
 }) {
   const tumu = new URLSearchParams();
   if (arama) tumu.set('q', arama);
@@ -171,22 +173,24 @@ export function KonumAgaci({
         </p>
       )}
 
-      <Link
-        href="/envanter/konum-ekle"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 7,
-          height: 27,
-          padding: '0 8px',
-          marginTop: 4,
-          borderRadius: 'var(--r-sm)',
-          fontSize: 12.5,
-          color: 'var(--muted)',
-        }}
-      >
-        + Konum ekle
-      </Link>
+      {!saltOkunur && (
+        <Link
+          href="/envanter/konum-ekle"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7,
+            height: 27,
+            padding: '0 8px',
+            marginTop: 4,
+            borderRadius: 'var(--r-sm)',
+            fontSize: 12.5,
+            color: 'var(--muted)',
+          }}
+        >
+          + Konum ekle
+        </Link>
+      )}
 
       {tipOzeti && (
         <div

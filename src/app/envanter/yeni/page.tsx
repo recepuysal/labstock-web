@@ -1,10 +1,13 @@
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ParcaFormu } from '@/components/parca-formu';
 import { agacKur, konumSecenekleri, type Konum } from '@/lib/types';
+import { saltOkunurMu } from '@/lib/gozlemci';
 
 export const dynamic = 'force-dynamic';
 
 export default async function YeniParcaSayfasi() {
+  if (await saltOkunurMu()) redirect('/envanter');
   const supabase = await createClient();
   const { data } = await supabase
     .from('locations')
