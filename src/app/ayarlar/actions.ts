@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/server';
 import type { EylemDurum } from '@/app/envanter/actions';
 import type { EnvanterSatiri } from '@/lib/types';
@@ -80,13 +81,7 @@ export async function profilResmiYukle(_onceki: EylemDurum, formData: FormData):
   return { bilgi: 'Görsel güncellendi.' };
 }
 
-export type DisaAktarSonuc = { hata?: string; csv?: string };
-
-function csvHucre(deger: string | number | null | undefined): string {
-  const s = deger === null || deger === undefined ? '' : String(deger);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
+export type DisaAktarSonuc = { hata?: string; xlsxTaban64?: string };
 
 const DURUM_METNI: Record<string, string> = {
   yeterli: 'Yeterli',
@@ -95,7 +90,9 @@ const DURUM_METNI: Record<string, string> = {
   yok: 'Yok',
 };
 
-/** Tüm envanteri CSV metni olarak döndürür — indirme işlemi tarayıcı tarafında yapılır. */
+/** Tüm envanteri .xlsx dosyası olarak (base64) döndürür — indirme işlemi tarayıcı tarafında yapılır.
+ * CSV yerine gerçek bir Excel dosyası üretiyoruz: Türkçe Windows/Excel virgülü ondalık ayracı
+ * olarak kullandığından düz virgüllü CSV'yi tek sütun halinde açar (noktalı virgül beklenir). */
 export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
   const supabase = await createClient();
   const {
@@ -137,30 +134,31 @@ export async function envanterDisaAktar(): Promise<DisaAktarSonuc> {
     'Son Güncelleme',
   ];
 
-  const satirMetinleri = satirlar.map((s) =>
-    [
-      s.mpn,
-      s.uretici,
-      s.aciklama,
-      s.kategori,
-      s.kilif,
-      s.rohs === true ? 'Evet' : s.rohs === false ? 'Hayır' : '',
-      s.konum_adi,
-      s.adet,
-      s.min_adet,
-      DURUM_METNI[s.durum] ?? s.durum,
-      s.tedarikci,
-      s.tedarikci_kodu,
-      s.alis_fiyati,
-      s.para_birimi,
-      s.datasheet_url,
-      (etiketHaritasi.get(s.stok_id) ?? []).join('; '),
-      s.updated_at ? new Date(s.updated_at).toLocaleString('tr-TR') : '',
-    ]
-      .map(csvHucre)
-      .join(','),
-  );
+  const veriSatirlari = satirlar.map((s) => [
+    s.mpn,
+    s.uretici ?? '',
+    s.aciklama ?? '',
+    s.kategori ?? '',
+    s.kilif ?? '',
+    s.rohs === true ? 'Evet' : s.rohs === false ? 'Hayır' : '',
+    s.konum_adi ?? '',
+    s.adet,
+    s.min_adet,
+    DURUM_METNI[s.durum] ?? s.durum,
+    s.tedarikci ?? '',
+    s.tedarikci_kodu ?? '',
+    s.alis_fiyati ?? '',
+    s.para_birimi,
+    s.datasheet_url ?? '',
+    (etiketHaritasi.get(s.stok_id) ?? []).join('; '),
+    s.updated_at ? new Date(s.updated_at).toLocaleString('tr-TR') : '',
+  ]);
 
-  const csv = [basliklar.join(','), ...satirMetinleri].join('\r\n');
-  return { csv };
+  const sayfa = XLSX.utils.aoa_to_sheet([basliklar, ...veriSatirlari]);
+  sayfa['!cols'] = basliklar.map((b) => ({ wch: Math.max(10, b.length + 2) }));
+  const kitap = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(kitap, sayfa, 'Envanter');
+
+  const arabellek = XLSX.write(kitap, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  return { xlsxTaban64: arabellek.toString('base64') };
 }
