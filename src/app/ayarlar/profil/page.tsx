@@ -37,8 +37,8 @@ export default async function ProfilSayfasi() {
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         <Link
           href="/envanter"
-          className="mn"
-          style={{ fontSize: 12, color: 'var(--muted)', display: 'inline-block', marginBottom: 14 }}
+          className="btn"
+          style={{ marginBottom: 18, color: 'var(--copper)', borderColor: 'var(--copper-line)', fontWeight: 600 }}
         >
           ← Envantere dön
         </Link>
