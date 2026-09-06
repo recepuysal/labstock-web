@@ -87,6 +87,9 @@ function renderereGonder(veri) {
 
 function guncellemeleriKontrolEt() {
   autoUpdater.autoDownload = false;
+  // GitHub'ın sürüm listesi CDN üzerinden önbelleklenebiliyor — arka arkaya
+  // sürüm çıkarınca bir öncekinin bir süre "en güncel" görünmesine yol açabilir.
+  autoUpdater.requestHeaders = { 'Cache-Control': 'no-cache' };
   autoUpdater.checkForUpdates().catch((err) => logYaz(`[guncelleme-hata] ${err.message}`));
 }
 
